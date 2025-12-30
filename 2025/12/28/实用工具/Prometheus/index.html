@@ -13,12 +13,12 @@
 <meta property="og:site_name" content="LightningJie 的博客">
 <meta property="og:description" content="Prometheus内容详解Prometheus 监控系统的架构图 官方文档：https:&#x2F;&#x2F;prometheus.io&#x2F;docs&#x2F;introduction&#x2F;overview&#x2F;exporters:官方&#x2F;第三方提供的exporters： https:&#x2F;&#x2F;prometheus.io&#x2F;docs&#x2F;instrumenting&#x2F;exporters&#x2F;自定义eporters：https:&#x2F;&#x2F;promet">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.%5Cimages%5Carchitecture.jpg">
+<meta property="og:image" content="http://example.com/images/architecture.jpg">
 <meta property="article:published_time" content="2025-12-28T02:00:00.000Z">
-<meta property="article:modified_time" content="2025-12-29T05:22:28.276Z">
+<meta property="article:modified_time" content="2025-12-30T12:10:02.490Z">
 <meta property="article:author" content="LightningJie">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.%5Cimages%5Carchitecture.jpg">
+<meta name="twitter:image" content="http://example.com/images/architecture.jpg">
     
     
       
@@ -163,7 +163,7 @@
   
 
   <div class="content e-content" itemprop="articleBody">
-    <h1 id="Prometheus内容详解"><a href="#Prometheus内容详解" class="headerlink" title="Prometheus内容详解"></a>Prometheus内容详解</h1><h2 id="Prometheus-监控系统的架构图"><a href="#Prometheus-监控系统的架构图" class="headerlink" title="Prometheus 监控系统的架构图"></a>Prometheus 监控系统的架构图</h2><p><img src="/.%5Cimages%5Carchitecture.jpg"></p>
+    <h1 id="Prometheus内容详解"><a href="#Prometheus内容详解" class="headerlink" title="Prometheus内容详解"></a>Prometheus内容详解</h1><h2 id="Prometheus-监控系统的架构图"><a href="#Prometheus-监控系统的架构图" class="headerlink" title="Prometheus 监控系统的架构图"></a>Prometheus 监控系统的架构图</h2><p><img src="/../../images/architecture.jpg"></p>
 <p>官方文档：<a target="_blank" rel="noopener" href="https://prometheus.io/docs/introduction/overview/">https://prometheus.io/docs/introduction/overview/</a><br>exporters:<br>官方&#x2F;第三方提供的exporters： <a target="_blank" rel="noopener" href="https://prometheus.io/docs/instrumenting/exporters/">https://prometheus.io/docs/instrumenting/exporters/</a><br>自定义eporters：<a target="_blank" rel="noopener" href="https://prometheus.io/docs/instrumenting/writing_exporters/">https://prometheus.io/docs/instrumenting/writing_exporters/</a><br>alert:<br>官方示例：<a target="_blank" rel="noopener" href="https://prometheus.io/docs/alerting/latest/notification_examples/">https://prometheus.io/docs/alerting/latest/notification_examples/</a><br>第三方提供的alert规则：<a target="_blank" rel="noopener" href="https://samber.github.io/awesome-prometheus-alerts/">https://samber.github.io/awesome-prometheus-alerts/</a><br>docker部署：<a target="_blank" rel="noopener" href="https://gitee.com/LightningJie/docker-prometheus/blob/main/docker-compose.yaml">https://gitee.com/LightningJie/docker-prometheus/blob/main/docker-compose.yaml</a></p>
 <h3 id="框架模块"><a href="#框架模块" class="headerlink" title="框架模块"></a>框架模块</h3><h4 id="Short-lived-jobs（短期作业）"><a href="#Short-lived-jobs（短期作业）" class="headerlink" title="Short - lived jobs（短期作业）"></a>Short - lived jobs（短期作业）</h4><p>​	这类作业生命周期较短，在退出时将指标数据推送到 Pushgateway。</p>
 <p>​	在数据库场景中，比如每天凌晨执行的数据库日志清理脚本，它在运行结束时，需要将执行过程中的相关指标（如处理的日志文件数量、删除的记录行数等）推送到 Pushgateway。由于其生命周期短，Prometheus 难以直接定时拉取指标，所以采用推送的方式</p>
