@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="TCP 粘包问题现象 粘包：应用层收到的数据多于一个数据包 半包：应用层收到的数据少于一个数据包 本质：TCP 不维护消息边界，需应用层自行处理消息边界   原因 TCP 协议特性 TCP 是基于字节流、面向连接的可靠传输协议，本身不区分消息边界，发送端连续发送的多个数据包，在接收端可能被合并成一段数据。  缓冲区机制  发送端：Nagle 算法优化小数据包传输，会合并多次send的内容批量发送。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP粘包问题">
+<meta property="og:url" content="http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/index.html">
+<meta property="og:site_name" content="LightningJie 的博客">
+<meta property="og:description" content="TCP 粘包问题现象 粘包：应用层收到的数据多于一个数据包 半包：应用层收到的数据少于一个数据包 本质：TCP 不维护消息边界，需应用层自行处理消息边界   原因 TCP 协议特性 TCP 是基于字节流、面向连接的可靠传输协议，本身不区分消息边界，发送端连续发送的多个数据包，在接收端可能被合并成一段数据。  缓冲区机制  发送端：Nagle 算法优化小数据包传输，会合并多次send的内容批量发送。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-01-22T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-01-22T01:45:15.499Z">
+<meta property="article:author" content="LightningJie">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>TCP粘包问题</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="LightningJie 的博客" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/01/21/c++/%E5%88%9D%E5%A7%8B%E5%8C%96%E5%8F%AF%E8%83%BD%E5%A4%B1%E8%B4%A5%E7%9A%84%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&text=TCP粘包问题"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&title=TCP粘包问题"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&is_video=false&description=TCP粘包问题"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=TCP粘包问题&body=Check out this article: http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&title=TCP粘包问题"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&title=TCP粘包问题"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&title=TCP粘包问题"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&title=TCP粘包问题"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&name=TCP粘包问题&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&t=TCP粘包问题"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#TCP-%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98"><span class="toc-number">1.</span> <span class="toc-text">TCP 粘包问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%8E%B0%E8%B1%A1"><span class="toc-number">1.1.</span> <span class="toc-text">现象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E5%9B%A0"><span class="toc-number">1.2.</span> <span class="toc-text">原因</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-number">1.3.</span> <span class="toc-text">解决方案</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%A4%84%E7%90%86%E9%80%BB%E8%BE%91"><span class="toc-number">1.4.</span> <span class="toc-text">核心处理逻辑</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB%EF%BC%9A"><span class="toc-number">1.5.</span> <span class="toc-text">问题汇总：</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        TCP粘包问题
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">LightningJie</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-01-22T02:00:00.000Z" class="dt-published" itemprop="datePublished">2026-01-22</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/c/">c++</a> › <a class="category-link" href="/categories/c/%E9%9A%8F%E7%AC%94/">随笔</a>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="TCP-粘包问题"><a href="#TCP-粘包问题" class="headerlink" title="TCP 粘包问题"></a>TCP 粘包问题</h1><h3 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h3><ul>
+<li><strong>粘包</strong>：应用层收到的数据<strong>多于一个数据包</strong></li>
+<li><strong>半包</strong>：应用层收到的数据<strong>少于一个数据包</strong></li>
+<li>本质：TCP 不维护消息边界，需<strong>应用层自行处理消息边界</strong></li>
+</ul>
+<hr>
+<h3 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h3><ol>
+<li><p><strong>TCP 协议特性</strong></p>
+<p>TCP 是基于字节流、面向连接的可靠传输协议，本身不区分消息边界，发送端连续发送的多个数据包，在接收端可能被合并成一段数据。</p>
+</li>
+<li><p><strong>缓冲区机制</strong></p>
+<ul>
+<li>发送端：Nagle 算法优化小数据包传输，会合并多次<code>send</code>的内容批量发送。</li>
+<li>接收端：若未及时读取数据，缓冲区堆积的多个数据包会被一次性读取，导致粘包。</li>
+</ul>
+</li>
+<li><p><strong>TCP 分段与重组</strong></p>
+<p>发送端会根据 MTU（最大传输单元）对数据分段，接收端重组分段时，可能将多个数据包合并为一段，引发粘包 &#x2F; 半包。</p>
+</li>
+</ol>
+<hr>
+<h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><table>
+<thead>
+<tr>
+<th align="center">方案</th>
+<th align="center">适用场景</th>
+<th align="center">注意事项</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">按消息长度界定</td>
+<td align="center">二进制数据传输</td>
+<td align="center">需在数据包头部携带长度字段</td>
+</tr>
+<tr>
+<td align="center">按分隔符界定</td>
+<td align="center">文本协议（如 HTTP、JSON）</td>
+<td align="center">需确保分隔符不出现于消息内容</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="核心处理逻辑"><a href="#核心处理逻辑" class="headerlink" title="核心处理逻辑"></a>核心处理逻辑</h3><ol>
+<li><strong>缓冲区设计</strong>：准备一个近似队列的缓冲区，用于暂存接收的数据。</li>
+<li><strong>数据读取</strong>：将网络数据读取到缓冲区中。</li>
+<li>数据包界定：<ul>
+<li>若缓冲区数据不足一个完整包：继续缓存，等待后续数据。</li>
+<li>若缓冲区包含多个完整包：取出一个完整包进行业务处理，剩余数据留在缓冲区。</li>
+</ul>
+</li>
+<li><strong>协议解析</strong>：对取出的完整数据包进行协议解析，完成业务逻辑。</li>
+</ol>
+<h2 id="问题汇总："><a href="#问题汇总：" class="headerlink" title="问题汇总："></a><strong>问题汇总：</strong></h2><ol>
+<li><p><strong>什么是 TCP 粘包 &#x2F; 半包？</strong></p>
+<ul>
+<li>高频提问：请描述 TCP 粘包和半包的现象</li>
+<li>核心回答：粘包是应用层收到多个数据包合并后的内容；半包是收到不完整的单个数据包。本质是 TCP 字节流无消息边界，需应用层自行处理。</li>
+</ul>
+</li>
+<li><p><strong>为什么 UDP 不会出现粘包？</strong></p>
+<ul>
+<li>高频提问：对比 TCP 和 UDP，为什么 UDP 没有粘包问题？</li>
+<li>核心回答：UDP 是面向报文的协议，每个<code>sendto</code>对应一个独立报文，接收端<code>recvfrom</code>一次读取一个完整报文，天然维护消息边界。</li>
+</ul>
+</li>
+<li><p><strong>TCP 粘包的根本原因是什么？</strong></p>
+</li>
+</ol>
+<ul>
+<li><p>高频提问：从协议和实现角度，分析 TCP 粘包的原因</p>
+</li>
+<li><p>核心回答：</p>
+<p>① 协议特性：TCP 是字节流协议，不区分消息边界；</p>
+<p>② 缓冲区机制：发送端 Nagle 算法合并小数据包，接收端未及时读数据导致缓冲区堆积；</p>
+<p>③ 分段重组：发送端按 MTU 分段，接收端重组时合并多个包。</p>
+</li>
+</ul>
+<ol start="4">
+<li><strong>Nagle 算法和粘包的关系？</strong></li>
+</ol>
+<ul>
+<li>高频提问：Nagle 算法会导致粘包吗？为什么？</li>
+<li>核心回答：会。Nagle 算法为优化小数据包传输，会合并多次<code>send</code>的小数据，批量发送，导致接收端一次收到多个数据包，引发粘包。</li>
+</ul>
+<ol start="5">
+<li><strong>解决 TCP 粘包的常见方案有哪些？</strong></li>
+</ol>
+<ul>
+<li><p>高频提问：请列举几种 TCP 粘包的解决方案，并说明适用场景</p>
+</li>
+<li><p>核心回答：</p>
+<p>① 长度前缀法：包头带长度字段，适合二进制数据（如 Protobuf、自定义二进制协议）；</p>
+<p>② 分隔符法：用特殊字符分隔数据包，适合文本协议（如 HTTP 的\r\n、JSON 的分隔符）；</p>
+<p>③ 固定长度法：每个数据包长度固定，适合定长数据场景（如金融交易报文）。</p>
+</li>
+</ul>
+<ol start="6">
+<li><strong>长度前缀法的具体实现思路？</strong></li>
+</ol>
+<ul>
+<li><p>高频提问：如果让你设计一个基于长度前缀的粘包处理方案，你会怎么做？</p>
+</li>
+<li><p>核心回答：</p>
+<p>① 数据包格式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[4字节长度][消息体]</span><br></pre></td></tr></table></figure>
+
+<p>（长度字段用网络字节序，避免大小端问题）；</p>
+<p>② 接收逻辑：先读 4 字节得到消息长度，再读取对应长度的消息体，确保拿到完整数据包。</p>
+</li>
+</ul>
+<ol start="7">
+<li><strong>分隔符法的局限性？</strong></li>
+</ol>
+<ul>
+<li>高频提问：分隔符法为什么不适合二进制数据？</li>
+<li>核心回答：二进制数据中可能包含分隔符（如 0x00、<code>\n</code>），导致误判消息边界，需转义处理，增加复杂度，因此更适合文本协议。</li>
+</ul>
+<ol start="8">
+<li><strong>粘包处理的核心缓冲区设计思路？</strong></li>
+</ol>
+<ul>
+<li><p>高频提问：处理粘包时，为什么需要缓冲区？如何设计？</p>
+</li>
+<li><p>核心回答：</p>
+<p>① 原因：接收端无法保证一次读取完整数据包，需暂存不完整数据；</p>
+<p>② 设计：用环形队列 &#x2F; 动态缓冲区，将每次读取的数据追加到缓冲区，然后循环检查缓冲区是否包含完整包，取出并处理。</p>
+</li>
+</ul>
+<ol start="9">
+<li><strong>处理粘包的完整流程？</strong></li>
+</ol>
+<ul>
+<li><p>高频提问：请描述从接收数据到解析完整数据包的流程</p>
+</li>
+<li><p>核心回答：</p>
+<p>① 读网络数据到缓冲区；</p>
+<p>② 检查缓冲区是否有完整包（按长度 &#x2F; 分隔符判断）；</p>
+<p>③ 若有：取出完整包，解析处理，剩余数据留在缓冲区；</p>
+<p>④ 若无：继续等待下一次数据到达。</p>
+</li>
+</ul>
+<ol start="10">
+<li><strong>HTTP 协议是如何避免粘包的？</strong></li>
+</ol>
+<p>回答：HTTP 通过<code>Content-Length</code>（长度前缀）或<code>Transfer-Encoding: chunked</code>（分块传输，每个块带长度）来界定消息边界，本质是应用层处理粘包的方案。</p>
+<ol start="11">
+<li><strong>Protobuf 是如何处理粘包的？</strong></li>
+</ol>
+<p>回答：Protobuf 本身不处理粘包，需上层协议配合，通常用<strong>长度前缀法</strong>（如在 Protobuf 消息前加 4 字节长度），接收端先读长度再读消息体。</p>
+<ol start="12">
+<li><strong>在实际项目中，你会选择哪种粘包解决方案？</strong></li>
+</ol>
+<p>回答：根据场景选择：</p>
+<ul>
+<li>二进制协议：优先长度前缀法（高效、无歧义）；</li>
+<li>文本协议：优先分隔符法（简单易实现）；</li>
+<li>定长数据：固定长度法（最直接）。</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/categories/">分类</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#TCP-%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98"><span class="toc-number">1.</span> <span class="toc-text">TCP 粘包问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%8E%B0%E8%B1%A1"><span class="toc-number">1.1.</span> <span class="toc-text">现象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E5%9B%A0"><span class="toc-number">1.2.</span> <span class="toc-text">原因</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-number">1.3.</span> <span class="toc-text">解决方案</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%A4%84%E7%90%86%E9%80%BB%E8%BE%91"><span class="toc-number">1.4.</span> <span class="toc-text">核心处理逻辑</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB%EF%BC%9A"><span class="toc-number">1.5.</span> <span class="toc-text">问题汇总：</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&text=TCP粘包问题"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&title=TCP粘包问题"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&is_video=false&description=TCP粘包问题"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=TCP粘包问题&body=Check out this article: http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&title=TCP粘包问题"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&title=TCP粘包问题"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&title=TCP粘包问题"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&title=TCP粘包问题"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&name=TCP粘包问题&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/&t=TCP粘包问题"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2025-2026
+    LightningJie
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
