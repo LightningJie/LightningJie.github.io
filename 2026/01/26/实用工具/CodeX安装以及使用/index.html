@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="CodeX安装以及使用1) 本地安装Windows（CMD &#x2F; PowerShell） 安装 Node.js（建议 18+） 全局安装 Codex CLI：  1npm i -g @openai&#x2F;codex   验证：  1codex --help   备注：官方说明 Windows 支持是“实验性”，体验更稳通常是在 WSL 工作区里用。   macOS Homebrew（cask）：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CodeX安装以及使用">
+<meta property="og:url" content="http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="LightningJie 的博客">
+<meta property="og:description" content="CodeX安装以及使用1) 本地安装Windows（CMD &#x2F; PowerShell） 安装 Node.js（建议 18+） 全局安装 Codex CLI：  1npm i -g @openai&#x2F;codex   验证：  1codex --help   备注：官方说明 Windows 支持是“实验性”，体验更稳通常是在 WSL 工作区里用。   macOS Homebrew（cask）：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-01-26T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-01-26T11:44:27.145Z">
+<meta property="article:author" content="LightningJie">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>CodeX安装以及使用</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="LightningJie 的博客" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/01/22/c++/TCP%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&text=CodeX安装以及使用"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&title=CodeX安装以及使用"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&is_video=false&description=CodeX安装以及使用"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=CodeX安装以及使用&body=Check out this article: http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&title=CodeX安装以及使用"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&title=CodeX安装以及使用"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&title=CodeX安装以及使用"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&title=CodeX安装以及使用"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&name=CodeX安装以及使用&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&t=CodeX安装以及使用"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8"><span class="toc-number">1.</span> <span class="toc-text">CodeX安装以及使用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%9C%AC%E5%9C%B0%E5%AE%89%E8%A3%85"><span class="toc-number">1.1.</span> <span class="toc-text">1) 本地安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Windows%EF%BC%88CMD-PowerShell%EF%BC%89"><span class="toc-number">1.1.1.</span> <span class="toc-text">Windows（CMD &#x2F; PowerShell）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#macOS"><span class="toc-number">1.1.2.</span> <span class="toc-text">macOS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%87%E7%BA%A7"><span class="toc-number">1.1.3.</span> <span class="toc-text">升级</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%99%BB%E5%BD%95%E4%B8%8E%E9%89%B4%E6%9D%83"><span class="toc-number">1.2.</span> <span class="toc-text">2) 登录与鉴权</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8B%E7%99%BB%E5%BD%95%E7%8A%B6%E6%80%81-%E9%80%80%E5%87%BA"><span class="toc-number">1.2.1.</span> <span class="toc-text">查看登录状态 &#x2F; 退出</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E9%80%9F%E6%9F%A5%EF%BC%88%E5%91%BD%E4%BB%A4%E8%A1%8C%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">3) 常用命令速查（命令行）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#A-%E4%BA%A4%E4%BA%92%E5%BC%8F%E4%BD%BF%E7%94%A8%EF%BC%88%E6%9C%80%E5%B8%B8%E7%94%A8%EF%BC%89"><span class="toc-number">1.3.1.</span> <span class="toc-text">A. 交互式使用（最常用）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#B-%E8%84%9A%E6%9C%AC-CI-%E9%9D%9E%E4%BA%A4%E4%BA%92%EF%BC%88%E5%BC%BA%E7%83%88%E5%BB%BA%E8%AE%AE%E4%BD%A0%E8%AE%B0%E4%BD%8F%EF%BC%89"><span class="toc-number">1.3.2.</span> <span class="toc-text">B. 脚本&#x2F;CI 非交互（强烈建议你记住）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#C-%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E7%9A%84%E5%85%B3%E9%94%AE%E5%8F%82%E6%95%B0%EF%BC%88%E5%BE%88%E9%87%8D%E8%A6%81%EF%BC%89"><span class="toc-number">1.3.3.</span> <span class="toc-text">C. 安全相关的关键参数（很重要）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%BA%A4%E4%BA%92%E4%BC%9A%E8%AF%9D%E9%87%8C%E6%9C%80%E5%B8%B8%E7%94%A8%E7%9A%84%E2%80%9C-%E6%96%9C%E6%9D%A0%E5%91%BD%E4%BB%A4%E2%80%9D"><span class="toc-number">1.4.</span> <span class="toc-text">4) 交互会话里最常用的“&#x2F;斜杠命令”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%BB%BA%E8%AE%AE%E7%9A%84%E4%BD%BF%E7%94%A8%E6%B5%81%E7%A8%8B%EF%BC%88%E9%AB%98%E6%88%90%E5%8A%9F%E7%8E%87%EF%BC%89"><span class="toc-number">1.5.</span> <span class="toc-text">5) 建议的使用流程（高成功率）</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        CodeX安装以及使用
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">LightningJie</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-01-26T02:00:00.000Z" class="dt-published" itemprop="datePublished">2026-01-26</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/">实用工具</a>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="CodeX安装以及使用"><a href="#CodeX安装以及使用" class="headerlink" title="CodeX安装以及使用"></a>CodeX安装以及使用</h1><h2 id="1-本地安装"><a href="#1-本地安装" class="headerlink" title="1) 本地安装"></a>1) 本地安装</h2><h3 id="Windows（CMD-PowerShell）"><a href="#Windows（CMD-PowerShell）" class="headerlink" title="Windows（CMD &#x2F; PowerShell）"></a>Windows（CMD &#x2F; PowerShell）</h3><ol>
+<li>安装 <strong>Node.js（建议 18+）</strong></li>
+<li>全局安装 Codex CLI：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm i -g @openai/codex</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>验证：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">codex --help</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>备注：官方说明 Windows 支持是“实验性”，体验更稳通常是在 WSL 工作区里用。 </p>
+</blockquote>
+<h3 id="macOS"><a href="#macOS" class="headerlink" title="macOS"></a>macOS</h3><ul>
+<li>Homebrew（cask）：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install --cask codex</span><br></pre></td></tr></table></figure>
+
+<h3 id="升级"><a href="#升级" class="headerlink" title="升级"></a>升级</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm i -g @openai/codex@latest</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="2-登录与鉴权"><a href="#2-登录与鉴权" class="headerlink" title="2) 登录与鉴权"></a>2) 登录与鉴权</h2><p>Codex 首次运行 <code>codex</code> 时通常会提示登录，也可以手动登录：  </p>
+<ol>
+<li><strong>浏览器 OAuth 登录（默认）</strong></li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">codex login</span><br></pre></td></tr></table></figure>
+
+<p>会打开浏览器走 OAuth。 </p>
+<h3 id="查看登录状态-退出"><a href="#查看登录状态-退出" class="headerlink" title="查看登录状态 &#x2F; 退出"></a>查看登录状态 &#x2F; 退出</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">codex login status</span><br><span class="line">codex logout</span><br></pre></td></tr></table></figure>
+
+
+
+<hr>
+<h2 id="3-常用命令速查（命令行）"><a href="#3-常用命令速查（命令行）" class="headerlink" title="3) 常用命令速查（命令行）"></a>3) 常用命令速查（命令行）</h2><p>官方 CLI 命令概览里，最常用的是这些： </p>
+<h3 id="A-交互式使用（最常用）"><a href="#A-交互式使用（最常用）" class="headerlink" title="A. 交互式使用（最常用）"></a>A. 交互式使用（最常用）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd &lt;你的项目目录&gt;</span><br><span class="line">codex</span><br></pre></td></tr></table></figure>
+
+<p>启动 TUI，能读代码、改文件、跑命令。 </p>
+<p>你也可以带一句初始任务：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">codex &quot;帮我梳理这个仓库结构并指出风险点&quot;</span><br></pre></td></tr></table></figure>
+
+<h3 id="B-脚本-CI-非交互（强烈建议你记住）"><a href="#B-脚本-CI-非交互（强烈建议你记住）" class="headerlink" title="B. 脚本&#x2F;CI 非交互（强烈建议你记住）"></a>B. 脚本&#x2F;CI 非交互（强烈建议你记住）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">codex exec &quot;生成 release notes（基于 git log），输出为 markdown&quot;</span><br></pre></td></tr></table></figure>
+
+<p><code>codex exec</code>（别名 <code>codex e</code>）用于“跑完就退出”的自动化场景，可输出纯文本或 JSON 事件流。 </p>
+<p>常见搭配：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">codex exec --json &quot;总结本仓库 open bugs&quot;</span><br><span class="line">codex exec -o out.txt &quot;把最终答案写入文件&quot;</span><br><span class="line">codex exec resume --last &quot;基于上一次 exec 的上下文继续做下一步&quot;</span><br></pre></td></tr></table></figure>
+
+<p>这些参数与 resume 行为在官方 reference 里有完整定义。 </p>
+<h3 id="C-安全相关的关键参数（很重要）"><a href="#C-安全相关的关键参数（很重要）" class="headerlink" title="C. 安全相关的关键参数（很重要）"></a>C. 安全相关的关键参数（很重要）</h3><ul>
+<li><code>--sandbox</code>：控制模型生成的 shell 命令权限（read-only &#x2F; workspace-write &#x2F; danger-full-access） </li>
+<li><code>--ask-for-approval</code>：控制何时需要你确认后才执行命令 </li>
+<li><code>--full-auto</code>：更“放手”的预设（仍有一定保护） </li>
+<li><code>--yolo</code>：完全绕过审批和沙盒（官方明确标注危险）</li>
+</ul>
+<hr>
+<h2 id="4-交互会话里最常用的“-斜杠命令”"><a href="#4-交互会话里最常用的“-斜杠命令”" class="headerlink" title="4) 交互会话里最常用的“&#x2F;斜杠命令”"></a>4) 交互会话里最常用的“&#x2F;斜杠命令”</h2><p>在 <code>codex</code> 的交互界面里输入 <code>/</code> 会弹出命令列表，常用这些：</p>
+<ul>
+<li><code>/model</code> 切模型</li>
+<li><code>/approvals</code> 调整审批强度</li>
+<li><code>/diff</code> 看改动（含未追踪文件）</li>
+<li><code>/review</code> 让 Codex 做一次 code review</li>
+<li><code>/status</code> 看当前会话配置与 token 状态</li>
+<li><code>/mention</code> 把指定文件&#x2F;路径“点名”给它</li>
+<li><code>/init</code> 生成 <code>AGENTS.md</code> 指令脚手架</li>
+<li><code>/compact</code> 压缩总结当前对话上下文</li>
+<li><code>/new</code> 新开线程、<code>/resume</code> 续接历史、<code>/logout</code> 退出登录</li>
+</ul>
+<hr>
+<h2 id="5-建议的使用流程（高成功率）"><a href="#5-建议的使用流程（高成功率）" class="headerlink" title="5) 建议的使用流程（高成功率）"></a>5) 建议的使用流程（高成功率）</h2><ol>
+<li><code>cd</code> 到你的仓库根目录</li>
+<li>先用保守模式跑一轮（只读 + 解释&#x2F;定位问题）</li>
+<li>再允许它改工作区（workspace-write）并要求它“先给计划，再改代码，再跑测试”</li>
+<li>每次改动后用 <code>/diff</code> 或 <code>git diff</code> 快速审查，再提交</li>
+</ol>
+<p>Codex 的设计就是在“你启动命令的目录&#x2F;允许的目录范围内”读写与运行命令，因此工作目录与权限设置很关键。 </p>
+<hr>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/categories/">分类</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8"><span class="toc-number">1.</span> <span class="toc-text">CodeX安装以及使用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%9C%AC%E5%9C%B0%E5%AE%89%E8%A3%85"><span class="toc-number">1.1.</span> <span class="toc-text">1) 本地安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Windows%EF%BC%88CMD-PowerShell%EF%BC%89"><span class="toc-number">1.1.1.</span> <span class="toc-text">Windows（CMD &#x2F; PowerShell）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#macOS"><span class="toc-number">1.1.2.</span> <span class="toc-text">macOS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%87%E7%BA%A7"><span class="toc-number">1.1.3.</span> <span class="toc-text">升级</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%99%BB%E5%BD%95%E4%B8%8E%E9%89%B4%E6%9D%83"><span class="toc-number">1.2.</span> <span class="toc-text">2) 登录与鉴权</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8B%E7%99%BB%E5%BD%95%E7%8A%B6%E6%80%81-%E9%80%80%E5%87%BA"><span class="toc-number">1.2.1.</span> <span class="toc-text">查看登录状态 &#x2F; 退出</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E9%80%9F%E6%9F%A5%EF%BC%88%E5%91%BD%E4%BB%A4%E8%A1%8C%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">3) 常用命令速查（命令行）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#A-%E4%BA%A4%E4%BA%92%E5%BC%8F%E4%BD%BF%E7%94%A8%EF%BC%88%E6%9C%80%E5%B8%B8%E7%94%A8%EF%BC%89"><span class="toc-number">1.3.1.</span> <span class="toc-text">A. 交互式使用（最常用）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#B-%E8%84%9A%E6%9C%AC-CI-%E9%9D%9E%E4%BA%A4%E4%BA%92%EF%BC%88%E5%BC%BA%E7%83%88%E5%BB%BA%E8%AE%AE%E4%BD%A0%E8%AE%B0%E4%BD%8F%EF%BC%89"><span class="toc-number">1.3.2.</span> <span class="toc-text">B. 脚本&#x2F;CI 非交互（强烈建议你记住）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#C-%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E7%9A%84%E5%85%B3%E9%94%AE%E5%8F%82%E6%95%B0%EF%BC%88%E5%BE%88%E9%87%8D%E8%A6%81%EF%BC%89"><span class="toc-number">1.3.3.</span> <span class="toc-text">C. 安全相关的关键参数（很重要）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%BA%A4%E4%BA%92%E4%BC%9A%E8%AF%9D%E9%87%8C%E6%9C%80%E5%B8%B8%E7%94%A8%E7%9A%84%E2%80%9C-%E6%96%9C%E6%9D%A0%E5%91%BD%E4%BB%A4%E2%80%9D"><span class="toc-number">1.4.</span> <span class="toc-text">4) 交互会话里最常用的“&#x2F;斜杠命令”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%BB%BA%E8%AE%AE%E7%9A%84%E4%BD%BF%E7%94%A8%E6%B5%81%E7%A8%8B%EF%BC%88%E9%AB%98%E6%88%90%E5%8A%9F%E7%8E%87%EF%BC%89"><span class="toc-number">1.5.</span> <span class="toc-text">5) 建议的使用流程（高成功率）</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&text=CodeX安装以及使用"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&title=CodeX安装以及使用"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&is_video=false&description=CodeX安装以及使用"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=CodeX安装以及使用&body=Check out this article: http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&title=CodeX安装以及使用"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&title=CodeX安装以及使用"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&title=CodeX安装以及使用"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&title=CodeX安装以及使用"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&name=CodeX安装以及使用&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/&t=CodeX安装以及使用"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2025-2026
+    LightningJie
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
