@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="shared_ptr 和unique_ptr实现面试里问“shared_ptr &#x2F; unique_ptr 怎么实现、怎么写代码”，一般不是要你写出 STL 完整版本，而是考察你是否抓住 所有权语义 + RAII + 拷贝&#x2F;移动规则 + 引用计数控制块 + 线程安全点。你可以按下面这个“答题套路”讲，再写一个能跑的简化实现（10~20 分钟能写完）。  1）unique_ptr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="shared_ptr 和unique_ptr实现">
+<meta property="og:url" content="http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="LightningJie 的博客">
+<meta property="og:description" content="shared_ptr 和unique_ptr实现面试里问“shared_ptr &#x2F; unique_ptr 怎么实现、怎么写代码”，一般不是要你写出 STL 完整版本，而是考察你是否抓住 所有权语义 + RAII + 拷贝&#x2F;移动规则 + 引用计数控制块 + 线程安全点。你可以按下面这个“答题套路”讲，再写一个能跑的简化实现（10~20 分钟能写完）。  1）unique_ptr">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-01-29T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-01-29T09:43:05.235Z">
+<meta property="article:author" content="LightningJie">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>shared_ptr 和unique_ptr实现</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="LightningJie 的博客" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/01/26/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/CodeX%E5%AE%89%E8%A3%85%E4%BB%A5%E5%8F%8A%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&text=shared_ptr 和unique_ptr实现"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&title=shared_ptr 和unique_ptr实现"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&is_video=false&description=shared_ptr 和unique_ptr实现"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=shared_ptr 和unique_ptr实现&body=Check out this article: http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&title=shared_ptr 和unique_ptr实现"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&title=shared_ptr 和unique_ptr实现"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&title=shared_ptr 和unique_ptr实现"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&title=shared_ptr 和unique_ptr实现"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&name=shared_ptr 和unique_ptr实现&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&t=shared_ptr 和unique_ptr实现"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#shared-ptr-%E5%92%8Cunique-ptr%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.</span> <span class="toc-text">shared_ptr 和unique_ptr实现</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        shared_ptr 和unique_ptr实现
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">LightningJie</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-01-29T02:00:00.000Z" class="dt-published" itemprop="datePublished">2026-01-29</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/c/">c++</a> › <a class="category-link" href="/categories/c/%E9%9A%8F%E7%AC%94/">随笔</a>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="shared-ptr-和unique-ptr实现"><a href="#shared-ptr-和unique-ptr实现" class="headerlink" title="shared_ptr 和unique_ptr实现"></a>shared_ptr 和unique_ptr实现</h1><p>面试里问“shared_ptr &#x2F; unique_ptr 怎么实现、怎么写代码”，一般不是要你写出 STL 完整版本，而是考察你是否抓住 <strong>所有权语义 + RAII + 拷贝&#x2F;移动规则 + 引用计数控制块 + 线程安全点</strong>。你可以按下面这个“答题套路”讲，再写一个能跑的简化实现（10~20 分钟能写完）。</p>
+<hr>
+<p>1）unique_ptr 怎么实现（要点）</p>
+<ul>
+<li><code>unique_ptr&lt;T&gt;</code> 只有一个成员：<code>T* ptr;</code>（再加 deleter）</li>
+<li><strong>禁止拷贝</strong>：拷贝构造&#x2F;拷贝赋值 <code>= delete</code></li>
+<li><strong>允许移动</strong>：移动构造&#x2F;移动赋值，把指针“转移”，源置空</li>
+<li>析构：如果 <code>ptr != nullptr</code> 就 <code>delete ptr</code>（或调用 deleter）</li>
+<li>提供 <code>get() / release() / reset() / operator* / operator-&gt;</code></li>
+</ul>
+<blockquote>
+<p>核心：独占所有权 + 移动语义 + RAII</p>
+</blockquote>
+<p>2）shared_ptr 怎么实现（要点）</p>
+<ul>
+<li><code>shared_ptr&lt;T&gt;</code> 内部有两个指针：<ul>
+<li><code>T* ptr</code> 指向对象</li>
+<li><code>ControlBlock* cb</code> 指向控制块（引用计数、deleter）</li>
+</ul>
+</li>
+<li>拷贝构造：<code>++cb-&gt;ref_cnt</code></li>
+<li>析构：<code>--cb-&gt;ref_cnt</code>，如果减到 0：<ul>
+<li>delete <code>ptr</code></li>
+<li>delete <code>cb</code></li>
+</ul>
+</li>
+<li>支持 <code>weak_ptr</code>：控制块里还有 <code>weak_cnt</code>（面试经常加分）</li>
+<li>线程安全：引用计数通常用 <code>std::atomic&lt;long&gt;</code>（但对象本身访问不自动线程安全）</li>
+</ul>
+<blockquote>
+<p>核心：共享所有权 + 控制块 + 引用计数 + 最后一个释放才 delete</p>
+</blockquote>
+<hr>
+<p>现场写的“简化版”代码（面试够用）</p>
+<blockquote>
+<p>下面是 <strong>最常被认可</strong> 的写法：能表达语义、能编译、逻辑正确。<br>（不包含数组版本、不包含自定义 deleter&#x2F;分配器的全套复杂细节，但足够应对面试）</p>
+</blockquote>
+<p>A) 简化版 unique_ptr（可手写）</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">class</span> <span class="title class_">T</span>&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">UniquePtr</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">UniquePtr</span>() <span class="keyword">noexcept</span> : <span class="built_in">ptr_</span>(<span class="literal">nullptr</span>) &#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">UniquePtr</span><span class="params">(T* p)</span> <span class="keyword">noexcept</span> : ptr_(p) &#123;</span>&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 禁止拷贝</span></span><br><span class="line">    <span class="built_in">UniquePtr</span>(<span class="type">const</span> UniquePtr&amp;) = <span class="keyword">delete</span>;</span><br><span class="line">    UniquePtr&amp; <span class="keyword">operator</span>=(<span class="type">const</span> UniquePtr&amp;) = <span class="keyword">delete</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 允许移动</span></span><br><span class="line">    <span class="built_in">UniquePtr</span>(UniquePtr&amp;&amp; other) <span class="keyword">noexcept</span> : <span class="built_in">ptr_</span>(other.ptr_) &#123;</span><br><span class="line">        other.ptr_ = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    UniquePtr&amp; <span class="keyword">operator</span>=(UniquePtr&amp;&amp; other) <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span> != &amp;other) &#123;</span><br><span class="line">            <span class="built_in">reset</span>();                 <span class="comment">// 先释放自己原来的</span></span><br><span class="line">            ptr_ = other.ptr_;       <span class="comment">// 接管</span></span><br><span class="line">            other.ptr_ = <span class="literal">nullptr</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ~<span class="built_in">UniquePtr</span>() &#123; <span class="built_in">reset</span>(); &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">T* <span class="title">get</span><span class="params">()</span> <span class="type">const</span> <span class="keyword">noexcept</span> </span>&#123; <span class="keyword">return</span> ptr_; &#125;</span><br><span class="line">    T&amp; <span class="keyword">operator</span>*() <span class="type">const</span> &#123; <span class="keyword">return</span> *ptr_; &#125;</span><br><span class="line">    T* <span class="keyword">operator</span>-&gt;() <span class="type">const</span> <span class="keyword">noexcept</span> &#123; <span class="keyword">return</span> ptr_; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">T* <span class="title">release</span><span class="params">()</span> <span class="keyword">noexcept</span> </span>&#123;</span><br><span class="line">        T* raw = ptr_;</span><br><span class="line">        ptr_ = <span class="literal">nullptr</span>;</span><br><span class="line">        <span class="keyword">return</span> raw;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">reset</span><span class="params">(T* p = <span class="literal">nullptr</span>)</span> <span class="keyword">noexcept</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (ptr_) <span class="keyword">delete</span> ptr_;</span><br><span class="line">        ptr_ = p;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="keyword">operator</span> <span class="title">bool</span><span class="params">()</span> <span class="type">const</span> <span class="keyword">noexcept</span> </span>&#123; <span class="keyword">return</span> ptr_ != <span class="literal">nullptr</span>; &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    T* ptr_;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>你写完这段，面试官一般会追问：</p>
+<ul>
+<li>“为什么 reset 里要先 delete 再赋值？”</li>
+<li>“移动赋值为什么要 self-check？”</li>
+<li>“release 用来干嘛？”<br>你都能顺着解释就稳了。</li>
+</ul>
+<hr>
+<p>B) 简化版 shared_ptr（核心：控制块 + 引用计数）</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;atomic&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">class</span> <span class="title class_">T</span>&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SharedPtr</span> &#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">ControlBlock</span> &#123;</span><br><span class="line">        std::atomic&lt;<span class="type">long</span>&gt; ref_cnt&#123;<span class="number">1</span>&#125;;</span><br><span class="line">        T* ptr;</span><br><span class="line">        <span class="function"><span class="keyword">explicit</span> <span class="title">ControlBlock</span><span class="params">(T* p)</span> : ptr(p) &#123;</span>&#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">SharedPtr</span>() <span class="keyword">noexcept</span> : <span class="built_in">cb_</span>(<span class="literal">nullptr</span>) &#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">SharedPtr</span><span class="params">(T* p)</span> : cb_(p ? new ControlBlock(p) : nullptr) &#123;</span>&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 拷贝：共享所有权</span></span><br><span class="line">    <span class="built_in">SharedPtr</span>(<span class="type">const</span> SharedPtr&amp; other) <span class="keyword">noexcept</span> : <span class="built_in">cb_</span>(other.cb_) &#123;</span><br><span class="line">        <span class="keyword">if</span> (cb_) cb_-&gt;ref_cnt.<span class="built_in">fetch_add</span>(<span class="number">1</span>, std::memory_order_relaxed);</span><br><span class="line">    &#125;</span><br><span class="line">    SharedPtr&amp; <span class="keyword">operator</span>=(<span class="type">const</span> SharedPtr&amp; other) <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span> != &amp;other) &#123;</span><br><span class="line">            <span class="built_in">release_cb</span>();</span><br><span class="line">            cb_ = other.cb_;</span><br><span class="line">            <span class="keyword">if</span> (cb_) cb_-&gt;ref_cnt.<span class="built_in">fetch_add</span>(<span class="number">1</span>, std::memory_order_relaxed);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 移动：转移控制块指针</span></span><br><span class="line">    <span class="built_in">SharedPtr</span>(SharedPtr&amp;&amp; other) <span class="keyword">noexcept</span> : <span class="built_in">cb_</span>(other.cb_) &#123;</span><br><span class="line">        other.cb_ = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    SharedPtr&amp; <span class="keyword">operator</span>=(SharedPtr&amp;&amp; other) <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span> != &amp;other) &#123;</span><br><span class="line">            <span class="built_in">release_cb</span>();</span><br><span class="line">            cb_ = other.cb_;</span><br><span class="line">            other.cb_ = <span class="literal">nullptr</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ~<span class="built_in">SharedPtr</span>() &#123; <span class="built_in">release_cb</span>(); &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">T* <span class="title">get</span><span class="params">()</span> <span class="type">const</span> <span class="keyword">noexcept</span> </span>&#123; <span class="keyword">return</span> cb_ ? cb_-&gt;ptr : <span class="literal">nullptr</span>; &#125;</span><br><span class="line">    T&amp; <span class="keyword">operator</span>*() <span class="type">const</span> &#123; <span class="keyword">return</span> *cb_-&gt;ptr; &#125;</span><br><span class="line">    T* <span class="keyword">operator</span>-&gt;() <span class="type">const</span> <span class="keyword">noexcept</span> &#123; <span class="keyword">return</span> cb_-&gt;ptr; &#125;</span><br><span class="line">    <span class="function"><span class="type">long</span> <span class="title">use_count</span><span class="params">()</span> <span class="type">const</span> <span class="keyword">noexcept</span> </span>&#123; <span class="keyword">return</span> cb_ ? cb_-&gt;ref_cnt.<span class="built_in">load</span>() : <span class="number">0</span>; &#125;</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="keyword">operator</span> <span class="title">bool</span><span class="params">()</span> <span class="type">const</span> <span class="keyword">noexcept</span> </span>&#123; <span class="keyword">return</span> <span class="built_in">get</span>() != <span class="literal">nullptr</span>; &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">release_cb</span><span class="params">()</span> <span class="keyword">noexcept</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!cb_) <span class="keyword">return</span>;</span><br><span class="line">        <span class="comment">// ref_cnt--，如果变成 0，释放资源和控制块</span></span><br><span class="line">        <span class="keyword">if</span> (cb_-&gt;ref_cnt.<span class="built_in">fetch_sub</span>(<span class="number">1</span>, std::memory_order_acq_rel) == <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="keyword">delete</span> cb_-&gt;ptr;</span><br><span class="line">            <span class="keyword">delete</span> cb_;</span><br><span class="line">        &#125;</span><br><span class="line">        cb_ = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ControlBlock* cb_;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>面试官常追问的点（你背这个就能答）：</p>
+<ul>
+<li>“为什么 shared_ptr 拷贝不 delete？”<br>因为只有 ref_cnt 到 0 才 delete。</li>
+<li>“为什么要控制块？”<br>因为对象地址和计数要共享、且计数要独立生命周期管理。</li>
+<li>“线程安全吗？”<br>计数加减用 atomic 可以做到基本线程安全；但 <em>对象本身</em> 并不自动线程安全。</li>
+</ul>
+<hr>
+<p>面试加分项：你主动补充 weak_ptr 和循环引用</p>
+<p>面试官常问：“shared_ptr 的坑是什么？”</p>
+<p>你说：</p>
+<ul>
+<li><strong>循环引用</strong>会泄漏：A 持有 B 的 shared_ptr，B 持有 A 的 shared_ptr，计数永远不为 0</li>
+<li>解决：引入 <code>weak_ptr</code>，弱引用不增加 strong 引用计数</li>
+</ul>
+<p>你不需要完整写出 weak_ptr，但能讲控制块里同时有：</p>
+<ul>
+<li><code>strong_count</code></li>
+<li><code>weak_count</code></li>
+<li>strong 到 0 delete 对象；weak 到 0 delete 控制块<br>就很加分。</li>
+</ul>
+<hr>
+<ol>
+<li><strong>把上面两个简化实现手写 3 遍</strong>（不看稿子写出来）</li>
+<li>每次写完自己回答这几个问题：<ul>
+<li>unique_ptr 为什么 delete copy？</li>
+<li>shared_ptr 拷贝&#x2F;析构分别做了什么？</li>
+<li>控制块里为什么要 atomic？</li>
+<li>循环引用怎么产生，weak_ptr 怎么解？</li>
+</ul>
+</li>
+<li>再准备 2 个小 demo 现场跑思路：<ul>
+<li>unique_ptr move 后原指针为 nullptr</li>
+<li>shared_ptr 拷贝 use_count 变化、最后一个析构才 delete</li>
+</ul>
+</li>
+</ol>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/categories/">分类</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#shared-ptr-%E5%92%8Cunique-ptr%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.</span> <span class="toc-text">shared_ptr 和unique_ptr实现</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&text=shared_ptr 和unique_ptr实现"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&title=shared_ptr 和unique_ptr实现"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&is_video=false&description=shared_ptr 和unique_ptr实现"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=shared_ptr 和unique_ptr实现&body=Check out this article: http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&title=shared_ptr 和unique_ptr实现"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&title=shared_ptr 和unique_ptr实现"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&title=shared_ptr 和unique_ptr实现"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&title=shared_ptr 和unique_ptr实现"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&name=shared_ptr 和unique_ptr实现&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/&t=shared_ptr 和unique_ptr实现"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2025-2026
+    LightningJie
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
