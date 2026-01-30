@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="ComfyUI 服务器部署笔记（Ubuntu 20.04 + NVIDIA，Windows 浏览器访问）目标 只在服务器部署 ComfyUI（Linux + GPU 推理） Windows 不装环境，直接用浏览器访问 用 SSH 隧道访问（默认不对公网开放 8188 端口，更安全）   服务器前置检查1) 确认显卡驱动正常1nvidia-smi  能看到 GPU 型号、Driver Version">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ComfyUI 服务器部署">
+<meta property="og:url" content="http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/index.html">
+<meta property="og:site_name" content="LightningJie 的博客">
+<meta property="og:description" content="ComfyUI 服务器部署笔记（Ubuntu 20.04 + NVIDIA，Windows 浏览器访问）目标 只在服务器部署 ComfyUI（Linux + GPU 推理） Windows 不装环境，直接用浏览器访问 用 SSH 隧道访问（默认不对公网开放 8188 端口，更安全）   服务器前置检查1) 确认显卡驱动正常1nvidia-smi  能看到 GPU 型号、Driver Version">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-01-30T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-01-30T02:18:39.789Z">
+<meta property="article:author" content="LightningJie">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>ComfyUI 服务器部署</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="LightningJie 的博客" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/01/29/c++/shared_ptr%20%E5%92%8Cunique_ptr%E5%AE%9E%E7%8E%B0/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&text=ComfyUI 服务器部署"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&title=ComfyUI 服务器部署"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&is_video=false&description=ComfyUI 服务器部署"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=ComfyUI 服务器部署&body=Check out this article: http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&title=ComfyUI 服务器部署"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&title=ComfyUI 服务器部署"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&title=ComfyUI 服务器部署"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&title=ComfyUI 服务器部署"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&name=ComfyUI 服务器部署&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&t=ComfyUI 服务器部署"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#ComfyUI-%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2%E7%AC%94%E8%AE%B0%EF%BC%88Ubuntu-20-04-NVIDIA%EF%BC%8CWindows-%E6%B5%8F%E8%A7%88%E5%99%A8%E8%AE%BF%E9%97%AE%EF%BC%89"><span class="toc-number">1.</span> <span class="toc-text">ComfyUI 服务器部署笔记（Ubuntu 20.04 + NVIDIA，Windows 浏览器访问）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E6%A0%87"><span class="toc-number">1.1.</span> <span class="toc-text">目标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%89%8D%E7%BD%AE%E6%A3%80%E6%9F%A5"><span class="toc-number">1.2.</span> <span class="toc-text">服务器前置检查</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%A1%AE%E8%AE%A4%E6%98%BE%E5%8D%A1%E9%A9%B1%E5%8A%A8%E6%AD%A3%E5%B8%B8"><span class="toc-number">1.2.1.</span> <span class="toc-text">1) 确认显卡驱动正常</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%B3%BB%E7%BB%9F%E7%89%88%E6%9C%AC-conda-%E7%89%88%E6%9C%AC%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%89"><span class="toc-number">1.2.2.</span> <span class="toc-text">2) 系统版本&#x2F;conda 版本（可选）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A8%E8%8D%90%E5%AE%89%E8%A3%85%E6%96%B9%E6%A1%88%EF%BC%88%E6%9C%80%E7%BB%88%E6%88%90%E5%8A%9F%E6%96%B9%E6%A1%88%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">推荐安装方案（最终成功方案）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Step-0%EF%BC%9A%E5%87%86%E5%A4%87%E7%9B%AE%E5%BD%95"><span class="toc-number">1.3.1.</span> <span class="toc-text">Step 0：准备目录</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1%EF%BC%9A%E5%88%9B%E5%BB%BA-conda-%E7%8E%AF%E5%A2%83%EF%BC%88Python-3-11%EF%BC%89"><span class="toc-number">1.4.</span> <span class="toc-text">Step 1：创建 conda 环境（Python 3.11）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2%EF%BC%9A%E7%94%A8-uv-%E5%8A%A0%E9%80%9F-pip-%E5%AE%89%E8%A3%85-PyTorch%EF%BC%88GPU-%E7%89%88%EF%BC%89"><span class="toc-number">1.5.</span> <span class="toc-text">Step 2：用 uv 加速 pip 安装 PyTorch（GPU 版）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%AE%89%E8%A3%85-uv"><span class="toc-number">1.5.1.</span> <span class="toc-text">2.1 安装 uv</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%AE%89%E8%A3%85-PyTorch-cu121%EF%BC%88%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%A9%B1%E5%8A%A8-12-x-%E4%B9%9F%E8%83%BD%E7%94%A8%EF%BC%89"><span class="toc-number">1.5.2.</span> <span class="toc-text">2.2 安装 PyTorch cu121（服务器驱动 12.x 也能用）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%AA%8C%E8%AF%81-torch-CUDA"><span class="toc-number">1.5.3.</span> <span class="toc-text">2.3 验证 torch &amp; CUDA</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3%EF%BC%9A%E5%AE%89%E8%A3%85-ComfyUI-%E4%BE%9D%E8%B5%96"><span class="toc-number">1.6.</span> <span class="toc-text">Step 3：安装 ComfyUI 依赖</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4%EF%BC%9A%E5%90%AF%E5%8A%A8-ComfyUI%EF%BC%88%E6%8E%A8%E8%8D%90%E5%8F%AA%E7%9B%91%E5%90%AC%E6%9C%AC%E6%9C%BA%EF%BC%89"><span class="toc-number">1.7.</span> <span class="toc-text">Step 4：启动 ComfyUI（推荐只监听本机）</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Windows-%E8%AE%BF%E9%97%AE%E6%96%B9%E5%BC%8F%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%9ASSH-%E9%9A%A7%E9%81%93%EF%BC%89"><span class="toc-number">2.</span> <span class="toc-text">Windows 访问方式（推荐：SSH 隧道）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%B9%E5%BC%8F-A%EF%BC%9A%E4%B8%8D%E5%BC%80%E6%94%BE%E7%AB%AF%E5%8F%A3%EF%BC%88%E6%9C%80%E5%AE%89%E5%85%A8%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">方式 A：不开放端口（最安全）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C-SSH-%E7%AB%AF%E5%8F%A3%E6%98%AF-22%EF%BC%88%E9%BB%98%E8%AE%A4%EF%BC%89"><span class="toc-number">2.1.1.</span> <span class="toc-text">如果 SSH 端口是 22（默认）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C-SSH-%E4%B8%8D%E6%98%AF-22%EF%BC%88%E4%BE%8B%E5%A6%82-2222%EF%BC%89"><span class="toc-number">2.1.2.</span> <span class="toc-text">如果 SSH 不是 22（例如 2222）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E9%94%AE%E5%A4%8D%E7%8E%B0%EF%BC%88%E6%9C%80%E7%AE%80%E7%89%88%E5%91%BD%E4%BB%A4%E4%B8%B2%EF%BC%89"><span class="toc-number">3.</span> <span class="toc-text">一键复现（最简版命令串）</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        ComfyUI 服务器部署
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">LightningJie</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-01-30T02:00:00.000Z" class="dt-published" itemprop="datePublished">2026-01-30</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/">实用工具</a>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="ComfyUI-服务器部署笔记（Ubuntu-20-04-NVIDIA，Windows-浏览器访问）"><a href="#ComfyUI-服务器部署笔记（Ubuntu-20-04-NVIDIA，Windows-浏览器访问）" class="headerlink" title="ComfyUI 服务器部署笔记（Ubuntu 20.04 + NVIDIA，Windows 浏览器访问）"></a>ComfyUI 服务器部署笔记（Ubuntu 20.04 + NVIDIA，Windows 浏览器访问）</h1><h2 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h2><ul>
+<li><strong>只在服务器部署 ComfyUI</strong>（Linux + GPU 推理）</li>
+<li>Windows 不装环境，<strong>直接用浏览器访问</strong></li>
+<li>用 <strong>SSH 隧道</strong>访问（默认不对公网开放 8188 端口，更安全）</li>
+</ul>
+<hr>
+<h2 id="服务器前置检查"><a href="#服务器前置检查" class="headerlink" title="服务器前置检查"></a>服务器前置检查</h2><h3 id="1-确认显卡驱动正常"><a href="#1-确认显卡驱动正常" class="headerlink" title="1) 确认显卡驱动正常"></a>1) 确认显卡驱动正常</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nvidia-smi</span><br></pre></td></tr></table></figure>
+
+<p>能看到 GPU 型号、Driver Version、CUDA Version 即可。</p>
+<blockquote>
+<p>说明：<code>nvidia-smi</code> 里显示的 “CUDA Version: 12.x” 是<strong>驱动支持的最高 CUDA 版本</strong>，不代表你必须装对应版本的 CUDA Toolkit。</p>
+</blockquote>
+<h3 id="2-系统版本-conda-版本（可选）"><a href="#2-系统版本-conda-版本（可选）" class="headerlink" title="2) 系统版本&#x2F;conda 版本（可选）"></a>2) 系统版本&#x2F;conda 版本（可选）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lsb_release -a</span><br><span class="line">conda --version</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="推荐安装方案（最终成功方案）"><a href="#推荐安装方案（最终成功方案）" class="headerlink" title="推荐安装方案（最终成功方案）"></a>推荐安装方案（最终成功方案）</h2><blockquote>
+<p>关键点：<strong>不要用 conda 安装 torch</strong>，改用 <strong>pip 官方 PyTorch wheel（cu121）</strong>，避免 <code>iJIT_NotifyEvent</code> 等二进制符号问题。</p>
+</blockquote>
+<h3 id="Step-0：准备目录"><a href="#Step-0：准备目录" class="headerlink" title="Step 0：准备目录"></a>Step 0：准备目录</h3><p>假设 ComfyUI 路径是：</p>
+<ul>
+<li><code>~/comfyui/ComfyUI</code></li>
+</ul>
+<p>没有的话：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p ~/comfyui</span><br><span class="line">cd ~/comfyui</span><br><span class="line">git clone https://github.com/comfyanonymous/ComfyUI.git</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="Step-1：创建-conda-环境（Python-3-11）"><a href="#Step-1：创建-conda-环境（Python-3-11）" class="headerlink" title="Step 1：创建 conda 环境（Python 3.11）"></a>Step 1：创建 conda 环境（Python 3.11）</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">conda create -n comfyui python=3.11 -y</span><br><span class="line">conda activate comfyui</span><br><span class="line">python -m pip install -U pip</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>不建议 Python 3.12（生态兼容性更容易踩坑）。</p>
+</blockquote>
+<hr>
+<h2 id="Step-2：用-uv-加速-pip-安装-PyTorch（GPU-版）"><a href="#Step-2：用-uv-加速-pip-安装-PyTorch（GPU-版）" class="headerlink" title="Step 2：用 uv 加速 pip 安装 PyTorch（GPU 版）"></a>Step 2：用 uv 加速 pip 安装 PyTorch（GPU 版）</h2><h3 id="2-1-安装-uv"><a href="#2-1-安装-uv" class="headerlink" title="2.1 安装 uv"></a>2.1 安装 uv</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install -U uv</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-安装-PyTorch-cu121（服务器驱动-12-x-也能用）"><a href="#2-2-安装-PyTorch-cu121（服务器驱动-12-x-也能用）" class="headerlink" title="2.2 安装 PyTorch cu121（服务器驱动 12.x 也能用）"></a>2.2 安装 PyTorch cu121（服务器驱动 12.x 也能用）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-3-验证-torch-CUDA"><a href="#2-3-验证-torch-CUDA" class="headerlink" title="2.3 验证 torch &amp; CUDA"></a>2.3 验证 torch &amp; CUDA</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -c &quot;import torch; print(&#x27;torch&#x27;, torch.__version__, &#x27;cuda&#x27;, torch.version.cuda, &#x27;avail&#x27;, torch.cuda.is_available())&quot;</span><br></pre></td></tr></table></figure>
+
+<p>期望输出类似：</p>
+<ul>
+<li><code>torch 2.5.1+cu121 cuda 12.1 avail True</code></li>
+</ul>
+<hr>
+<h2 id="Step-3：安装-ComfyUI-依赖"><a href="#Step-3：安装-ComfyUI-依赖" class="headerlink" title="Step 3：安装 ComfyUI 依赖"></a>Step 3：安装 ComfyUI 依赖</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ~/comfyui/ComfyUI</span><br><span class="line">pip install -r requirements.txt</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="Step-4：启动-ComfyUI（推荐只监听本机）"><a href="#Step-4：启动-ComfyUI（推荐只监听本机）" class="headerlink" title="Step 4：启动 ComfyUI（推荐只监听本机）"></a>Step 4：启动 ComfyUI（推荐只监听本机）</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd ~/comfyui/ComfyUI</span><br><span class="line">export CUDA_VISIBLE_DEVICES=0     # 可选：指定用哪张卡（0/1）</span><br><span class="line">python main.py --listen 127.0.0.1 --port 8188</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>--listen 127.0.0.1</code>：只允许本机访问（安全）</li>
+<li><code>--port 8188</code>：默认端口</li>
+</ul>
+<p>启动后看到类似 “Running on <a href="http://127.0.0.1:8188”">http://127.0.0.1:8188”</a> 即成功。</p>
+<hr>
+<h1 id="Windows-访问方式（推荐：SSH-隧道）"><a href="#Windows-访问方式（推荐：SSH-隧道）" class="headerlink" title="Windows 访问方式（推荐：SSH 隧道）"></a>Windows 访问方式（推荐：SSH 隧道）</h1><h2 id="方式-A：不开放端口（最安全）"><a href="#方式-A：不开放端口（最安全）" class="headerlink" title="方式 A：不开放端口（最安全）"></a>方式 A：不开放端口（最安全）</h2><p>在 Windows PowerShell 执行：</p>
+<h3 id="如果-SSH-端口是-22（默认）"><a href="#如果-SSH-端口是-22（默认）" class="headerlink" title="如果 SSH 端口是 22（默认）"></a>如果 SSH 端口是 22（默认）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -L 8188:127.0.0.1:8188 &lt;用户名&gt;@&lt;ip&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="如果-SSH-不是-22（例如-2222）"><a href="#如果-SSH-不是-22（例如-2222）" class="headerlink" title="如果 SSH 不是 22（例如 2222）"></a>如果 SSH 不是 22（例如 2222）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -p 2222 -L 8188:127.0.0.1:8188 &lt;用户名&gt;@&lt;ip&gt;</span><br></pre></td></tr></table></figure>
+
+<p>然后 Windows 浏览器打开：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1:8188</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：SSH 窗口不能关，关了隧道就断。</p>
+</blockquote>
+<hr>
+<h1 id="一键复现（最简版命令串）"><a href="#一键复现（最简版命令串）" class="headerlink" title="一键复现（最简版命令串）"></a>一键复现（最简版命令串）</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">conda create -n comfyui python=3.11 -y</span><br><span class="line">conda activate comfyui</span><br><span class="line">pip install -U pip uv</span><br><span class="line">uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121</span><br><span class="line"></span><br><span class="line">cd ~/comfyui/ComfyUI</span><br><span class="line">pip install -r requirements.txt</span><br><span class="line"></span><br><span class="line">export CUDA_VISIBLE_DEVICES=0</span><br><span class="line">python main.py --listen 127.0.0.1 --port 8188</span><br></pre></td></tr></table></figure>
+
+<p>Windows：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -L 8188:127.0.0.1:8188 &lt;用户名&gt;@&lt;ip&gt;</span><br></pre></td></tr></table></figure>
+
+<p>浏览器：<br> <code>http://127.0.0.1:8188</code></p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/categories/">分类</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#ComfyUI-%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2%E7%AC%94%E8%AE%B0%EF%BC%88Ubuntu-20-04-NVIDIA%EF%BC%8CWindows-%E6%B5%8F%E8%A7%88%E5%99%A8%E8%AE%BF%E9%97%AE%EF%BC%89"><span class="toc-number">1.</span> <span class="toc-text">ComfyUI 服务器部署笔记（Ubuntu 20.04 + NVIDIA，Windows 浏览器访问）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E6%A0%87"><span class="toc-number">1.1.</span> <span class="toc-text">目标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%89%8D%E7%BD%AE%E6%A3%80%E6%9F%A5"><span class="toc-number">1.2.</span> <span class="toc-text">服务器前置检查</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%A1%AE%E8%AE%A4%E6%98%BE%E5%8D%A1%E9%A9%B1%E5%8A%A8%E6%AD%A3%E5%B8%B8"><span class="toc-number">1.2.1.</span> <span class="toc-text">1) 确认显卡驱动正常</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%B3%BB%E7%BB%9F%E7%89%88%E6%9C%AC-conda-%E7%89%88%E6%9C%AC%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%89"><span class="toc-number">1.2.2.</span> <span class="toc-text">2) 系统版本&#x2F;conda 版本（可选）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A8%E8%8D%90%E5%AE%89%E8%A3%85%E6%96%B9%E6%A1%88%EF%BC%88%E6%9C%80%E7%BB%88%E6%88%90%E5%8A%9F%E6%96%B9%E6%A1%88%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">推荐安装方案（最终成功方案）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Step-0%EF%BC%9A%E5%87%86%E5%A4%87%E7%9B%AE%E5%BD%95"><span class="toc-number">1.3.1.</span> <span class="toc-text">Step 0：准备目录</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1%EF%BC%9A%E5%88%9B%E5%BB%BA-conda-%E7%8E%AF%E5%A2%83%EF%BC%88Python-3-11%EF%BC%89"><span class="toc-number">1.4.</span> <span class="toc-text">Step 1：创建 conda 环境（Python 3.11）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2%EF%BC%9A%E7%94%A8-uv-%E5%8A%A0%E9%80%9F-pip-%E5%AE%89%E8%A3%85-PyTorch%EF%BC%88GPU-%E7%89%88%EF%BC%89"><span class="toc-number">1.5.</span> <span class="toc-text">Step 2：用 uv 加速 pip 安装 PyTorch（GPU 版）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%AE%89%E8%A3%85-uv"><span class="toc-number">1.5.1.</span> <span class="toc-text">2.1 安装 uv</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%AE%89%E8%A3%85-PyTorch-cu121%EF%BC%88%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%A9%B1%E5%8A%A8-12-x-%E4%B9%9F%E8%83%BD%E7%94%A8%EF%BC%89"><span class="toc-number">1.5.2.</span> <span class="toc-text">2.2 安装 PyTorch cu121（服务器驱动 12.x 也能用）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%AA%8C%E8%AF%81-torch-CUDA"><span class="toc-number">1.5.3.</span> <span class="toc-text">2.3 验证 torch &amp; CUDA</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3%EF%BC%9A%E5%AE%89%E8%A3%85-ComfyUI-%E4%BE%9D%E8%B5%96"><span class="toc-number">1.6.</span> <span class="toc-text">Step 3：安装 ComfyUI 依赖</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4%EF%BC%9A%E5%90%AF%E5%8A%A8-ComfyUI%EF%BC%88%E6%8E%A8%E8%8D%90%E5%8F%AA%E7%9B%91%E5%90%AC%E6%9C%AC%E6%9C%BA%EF%BC%89"><span class="toc-number">1.7.</span> <span class="toc-text">Step 4：启动 ComfyUI（推荐只监听本机）</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Windows-%E8%AE%BF%E9%97%AE%E6%96%B9%E5%BC%8F%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%9ASSH-%E9%9A%A7%E9%81%93%EF%BC%89"><span class="toc-number">2.</span> <span class="toc-text">Windows 访问方式（推荐：SSH 隧道）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%B9%E5%BC%8F-A%EF%BC%9A%E4%B8%8D%E5%BC%80%E6%94%BE%E7%AB%AF%E5%8F%A3%EF%BC%88%E6%9C%80%E5%AE%89%E5%85%A8%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">方式 A：不开放端口（最安全）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C-SSH-%E7%AB%AF%E5%8F%A3%E6%98%AF-22%EF%BC%88%E9%BB%98%E8%AE%A4%EF%BC%89"><span class="toc-number">2.1.1.</span> <span class="toc-text">如果 SSH 端口是 22（默认）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C-SSH-%E4%B8%8D%E6%98%AF-22%EF%BC%88%E4%BE%8B%E5%A6%82-2222%EF%BC%89"><span class="toc-number">2.1.2.</span> <span class="toc-text">如果 SSH 不是 22（例如 2222）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E9%94%AE%E5%A4%8D%E7%8E%B0%EF%BC%88%E6%9C%80%E7%AE%80%E7%89%88%E5%91%BD%E4%BB%A4%E4%B8%B2%EF%BC%89"><span class="toc-number">3.</span> <span class="toc-text">一键复现（最简版命令串）</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&text=ComfyUI 服务器部署"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&title=ComfyUI 服务器部署"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&is_video=false&description=ComfyUI 服务器部署"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=ComfyUI 服务器部署&body=Check out this article: http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&title=ComfyUI 服务器部署"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&title=ComfyUI 服务器部署"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&title=ComfyUI 服务器部署"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&title=ComfyUI 服务器部署"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&name=ComfyUI 服务器部署&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/01/30/%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7/Comfy%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2/&t=ComfyUI 服务器部署"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2025-2026
+    LightningJie
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
