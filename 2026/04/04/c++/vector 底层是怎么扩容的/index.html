@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="vector 底层是怎么扩容的？ vector 底层内存模型是什么 push_back 时什么时候会触发扩容 扩容时一般按什么策略增长，为什么不能每次只加 1 扩容时旧元素怎么搬到新空间 什么情况下拷贝 什么情况下移动   扩容以后，原来的迭代器 &#x2F; 指针 &#x2F; 引用会不会失效，为什么 resize 和 reserve 的区别 为什么 vector 的尾插快，头插慢 从源码实现思">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LightningJie 的博客">
+<meta property="og:url" content="http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/index.html">
+<meta property="og:site_name" content="LightningJie 的博客">
+<meta property="og:description" content="vector 底层是怎么扩容的？ vector 底层内存模型是什么 push_back 时什么时候会触发扩容 扩容时一般按什么策略增长，为什么不能每次只加 1 扩容时旧元素怎么搬到新空间 什么情况下拷贝 什么情况下移动   扩容以后，原来的迭代器 &#x2F; 指针 &#x2F; 引用会不会失效，为什么 resize 和 reserve 的区别 为什么 vector 的尾插快，头插慢 从源码实现思">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-04-04T10:20:56.859Z">
+<meta property="article:modified_time" content="2026-04-04T10:22:50.508Z">
+<meta property="article:author" content="LightningJie">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>LightningJie 的博客</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="LightningJie 的博客" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2026/04/05/c++/make_shared%20%E5%92%8Cshared_ptrT(new%20T)%E5%8C%BA%E5%88%AB/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&text="><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&title="><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&is_video=false&description="><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=&body=Check out this article: http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&title="><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&title="><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&title="><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&title="><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&name=&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&t="><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#vector-%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84%EF%BC%9F"><span class="toc-number">1.</span> <span class="toc-text">vector 底层是怎么扩容的？</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">LightningJie</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-04-04T10:20:56.859Z" class="dt-published" itemprop="datePublished">2026-04-04</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="vector-底层是怎么扩容的？"><a href="#vector-底层是怎么扩容的？" class="headerlink" title="vector 底层是怎么扩容的？"></a>vector 底层是怎么扩容的？</h1><ol>
+<li><strong><code>vector</code> 底层内存模型是什么</strong></li>
+<li><strong><code>push_back</code> 时什么时候会触发扩容</strong></li>
+<li><strong>扩容时一般按什么策略增长，为什么不能每次只加 1</strong></li>
+<li><strong>扩容时旧元素怎么搬到新空间</strong><ul>
+<li><strong>什么情况下拷贝</strong></li>
+<li><strong>什么情况下移动</strong></li>
+</ul>
+</li>
+<li><strong>扩容以后，原来的迭代器 &#x2F; 指针 &#x2F; 引用会不会失效，为什么</strong></li>
+<li><strong><code>resize</code> 和 <code>reserve</code> 的区别</strong></li>
+<li><strong>为什么 <code>vector</code> 的尾插快，头插慢</strong></li>
+<li><strong>从源码实现思路上讲，扩容的大致流程是什么</strong></li>
+</ol>
+<p><code>std::vector</code> 本质上是<strong>一段连续内存上的动态数组</strong>。它底层一般就是三根指针，或者等价的三个位置概念：一根指向起始位置，一根指向当前最后一个元素的下一个位置，还有一根指向整块已分配内存的末尾。所以它能做到随机访问是 O(1)，因为下标访问本质上就是首地址加偏移。</p>
+<p><code>push_back</code> 的时候，如果当前 <code>size &lt; capacity</code>，那就直接在尾部那块还没使用的空间上构造一个新元素，不需要扩容；如果当前 <code>size == capacity</code>，说明预留空间已经满了，这时候就会触发扩容。</p>
+<p>扩容一般不会每次只加 1，而是按一个<strong>倍增策略</strong>去长，常见是 1.5 倍或者 2 倍，具体增长因标准库实现而异。原因很简单，如果每次只加 1，那你插入 n 个元素时，几乎每次都要重新申请空间、搬迁旧元素、释放旧空间，总代价会退化得很差。按倍增做的话，虽然某一次扩容很重，但摊还下来，<code>push_back</code> 的均摊复杂度仍然是 O(1)。</p>
+<p>你刚才追问的那个点很关键。像 <code>vector&lt;string&gt;</code> 扩容时，<strong>不是直接逐个 memcpy 过去</strong>，而是要在新空间里<strong>调用构造函数把旧元素搬过去</strong>。更准确地说，是对每个元素做“逐个迁移构造”——优先走移动构造，必要时走拷贝构造。因为 <code>string</code> 这种类型不是简单的 POD 裸数据，它内部自己还管理堆内存、指针、长度这些资源。如果直接 <code>memcpy</code>，只是把对象的字节生硬拷过去，会导致两个对象内部指向同一块资源，后面析构就会出大问题。所以对于这种非平凡类型，必须按对象语义来搬。</p>
+<p>至于什么时候拷贝，什么时候移动，一般是这样理解：如果元素类型支持移动构造，并且这个移动构造是编译器和库认为“可以安全采用”的，那扩容时会优先移动，因为移动通常比拷贝便宜；如果没有移动构造，或者出于异常安全等原因不能放心移动，那就会退回拷贝构造。比如早期实现里，经常会倾向于“如果移动构造不是 <code>noexcept</code>，那为了维持强异常安全，可能宁可拷贝也不移动”。所以面试里说一句“通常优先移动，移动不合适时退回拷贝”会比较稳。</p>
+<p>扩容以后，原来的<strong>迭代器、指针、引用基本都会失效</strong>。原因就在于 vector 的元素必须放在连续内存里，一旦扩容，通常会重新申请一块更大的新内存，然后把旧元素搬过去，原来那块地址就不用了。既然底层地址变了，那你之前拿到的元素地址、迭代器、引用，指向的就是老空间，自然失效了。这个是 vector 很典型的使用坑。</p>
+<p><code>reserve</code> 和 <code>resize</code> 的区别也经常被问。<code>reserve</code> 是<strong>预留容量</strong>，它只管 capacity，告诉 vector 你至少给我准备这么多空间，但逻辑上的元素个数 <code>size</code> 不变；而 <code>resize</code> 是<strong>改元素个数</strong>，会真正把 <code>size</code> 改掉。比如把 <code>resize(10)</code>，如果原来只有 5 个元素，那它会补出 5 个新元素；如果改小，还会析构多出来的元素。所以一个是管容量，一个是管实际元素数量。</p>
+<p>为什么 <code>vector</code> 尾插快、头插慢，本质也是因为连续内存。尾插如果不扩容，直接在末尾构造就行了，代价很小；但头插或者中间插入时，为了保持连续性，后面的元素都得整体往后挪位置，这个代价就是 O(n)。如果再碰上扩容，还得先申请新空间再整体搬迁，成本更高。</p>
+<p>如果从源码实现思路上讲，扩容的大致流程我会这么概括：</p>
+<p>先算出新的容量，通常比旧容量更大；然后申请一块新的原始未初始化内存；接着把旧空间里的元素按顺序在新空间里逐个构造出来，这一步通常用 allocator 配合 <code>uninitialized_move</code> 或 <code>uninitialized_copy</code> 这类思路去做；如果中间出异常，要把新空间里已经构造成功的对象逐个析构掉，再释放新内存，保证不泄漏；等全部迁移成功后，再把旧空间原来的对象逐个析构，释放旧内存；最后更新内部的起始指针、结束指针和容量边界指针，让 vector 指向新空间。</p>
+<p>所以总结一下，<code>vector&lt;string&gt;</code> 扩容绝不是简单 <code>memcpy</code>，而是按对象语义逐个构造搬迁。只有像特别简单、可平凡复制的类型，在某些实现和优化条件下，底层才可能做更激进的字节级优化；但从标准语义和通用回答上讲，你应该答“调用构造函数迁移，而不是无脑 memcpy”，这个更准确。</p>
+<p>如果面试官继续追问，我还可以接着帮你答：“为什么有的类型移动了反而不一定更快”、“vector 扩容的异常安全怎么保证”、“emplace_back 和 push_back 在扩容场景下有什么区别”。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/categories/">分类</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#vector-%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84%EF%BC%9F"><span class="toc-number">1.</span> <span class="toc-text">vector 底层是怎么扩容的？</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&text="><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&title="><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&is_video=false&description="><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=&body=Check out this article: http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&title="><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&title="><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&title="><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&title="><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&name=&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/04/04/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/&t="><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2025-2026
+    LightningJie
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
