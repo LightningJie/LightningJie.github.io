@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="左值、右值、右值引用、std::move、完美转发这题是 C++ 面试高频，而且特别容易被一路追到源码和模板推导。 面试不要只提到“左值有名字，右值没名字”，要你往深了答：  左值和右值本质区别是什么 是不是“能不能取地址”这么简单？   什么是将亡值（xvalue），什么是纯右值（prvalue） 为什么要引入右值引用 T&amp;&amp; 在什么场景下一定是右值引用，什么场景下又不一定 st">
+<meta property="og:type" content="article">
+<meta property="og:title" content="左值、右值、右值引用、std::move、完美转发问题">
+<meta property="og:url" content="http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/index.html">
+<meta property="og:site_name" content="LightningJie 的博客">
+<meta property="og:description" content="左值、右值、右值引用、std::move、完美转发这题是 C++ 面试高频，而且特别容易被一路追到源码和模板推导。 面试不要只提到“左值有名字，右值没名字”，要你往深了答：  左值和右值本质区别是什么 是不是“能不能取地址”这么简单？   什么是将亡值（xvalue），什么是纯右值（prvalue） 为什么要引入右值引用 T&amp;&amp; 在什么场景下一定是右值引用，什么场景下又不一定 st">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-04-04T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-04T10:07:53.909Z">
+<meta property="article:author" content="LightningJie">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>左值、右值、右值引用、std::move、完美转发问题</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="LightningJie 的博客" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/03/02/%E9%A1%B9%E7%9B%AE/myLSM/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&text=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&title=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&is_video=false&description=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=左值、右值、右值引用、std::move、完美转发问题&body=Check out this article: http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&title=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&title=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&title=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&title=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&name=左值、右值、右值引用、std::move、完美转发问题&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&t=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B7%A6%E5%80%BC%E3%80%81%E5%8F%B3%E5%80%BC%E3%80%81%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8%E3%80%81std-move%E3%80%81%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91"><span class="toc-number">1.</span> <span class="toc-text">左值、右值、右值引用、std::move、完美转发</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E5%9B%9E%E7%AD%94"><span class="toc-number">2.</span> <span class="toc-text">问题回答</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%BC%95%E5%85%A5%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8"><span class="toc-number">2.1.</span> <span class="toc-text">为什么要引入右值引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T-%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E4%B8%80%E5%AE%9A%E6%98%AF%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8%EF%BC%8C%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E5%8F%88%E4%B8%8D%E4%B8%80%E5%AE%9A"><span class="toc-number">2.2.</span> <span class="toc-text">T&amp;&amp; 什么时候一定是右值引用，什么时候又不一定</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#std-move-%E5%88%B0%E5%BA%95%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88"><span class="toc-number">2.3.</span> <span class="toc-text">std::move 到底做了什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E5%AF%B9%E8%B1%A1%E8%A2%AB-move-%E4%B9%8B%E5%90%8E%E5%A4%84%E4%BA%8E%E4%BB%80%E4%B9%88%E7%8A%B6%E6%80%81"><span class="toc-number">2.4.</span> <span class="toc-text">一个对象被 move 之后处于什么状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%BD%AC%E5%8F%91%E5%BC%95%E7%94%A8"><span class="toc-number">2.5.</span> <span class="toc-text">什么是转发引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#std-forward-%E5%92%8C-std-move-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">2.6.</span> <span class="toc-text">std::forward 和 std::move 的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91%E4%B8%BA%E4%BB%80%E4%B9%88%E8%83%BD%E4%BF%9D%E6%8C%81%E5%8E%9F%E6%9C%AC%E5%80%BC%E7%B1%BB%E5%88%AB"><span class="toc-number">2.7.</span> <span class="toc-text">完美转发为什么能保持原本值类别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%99%E4%B8%AA%E6%A8%A1%E6%9D%BF%E9%87%8C%E5%BF%85%E9%A1%BB%E7%94%A8-forward%EF%BC%8C%E4%B8%8D%E8%83%BD%E6%97%A0%E8%84%91%E7%94%A8-move"><span class="toc-number">2.8.</span> <span class="toc-text">为什么这个模板里必须用 forward，不能无脑用 move</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%94%B6%E5%B0%BE"><span class="toc-number">2.9.</span> <span class="toc-text">收尾</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        左值、右值、右值引用、std::move、完美转发问题
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">LightningJie</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-04-04T02:00:00.000Z" class="dt-published" itemprop="datePublished">2026-04-04</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/c/">c++</a> › <a class="category-link" href="/categories/c/%E9%9A%8F%E7%AC%94/">随笔</a>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="左值、右值、右值引用、std-move、完美转发"><a href="#左值、右值、右值引用、std-move、完美转发" class="headerlink" title="左值、右值、右值引用、std::move、完美转发"></a>左值、右值、右值引用、std::move、完美转发</h1><p>这题是 C++ 面试高频，而且特别容易被一路追到源码和模板推导。</p>
+<p>面试不要只提到“左值有名字，右值没名字”，要你往深了答：</p>
+<ol>
+<li><strong>左值和右值本质区别是什么</strong><ul>
+<li>是不是“能不能取地址”这么简单？</li>
+</ul>
+</li>
+<li><strong>什么是将亡值（xvalue），什么是纯右值（prvalue）</strong></li>
+<li><strong>为什么要引入右值引用</strong></li>
+<li><strong><code>T&amp;&amp;</code> 在什么场景下一定是右值引用，什么场景下又不一定</strong></li>
+<li><strong>std::move到底做了什么</strong><ul>
+<li><strong>它会不会真的移动对象？</strong></li>
+<li><strong>它的本质是不是一次强制类型转换？</strong></li>
+</ul>
+</li>
+<li><strong>一个对象被 <code>move</code> 之后，处于什么状态</strong></li>
+<li><strong>什么是转发引用（万能引用）</strong></li>
+<li><strong><code>std::forward</code> 和 <code>std::move</code> 的区别</strong></li>
+<li><strong>完美转发是怎么做到“保持实参原本的值类别”的</strong></li>
+<li><strong>为什么下面这个模板里必须用 <code>forward</code>，不能无脑用 <code>move</code></strong></li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">class</span> T, <span class="keyword">class</span>... Args&gt;</span></span><br><span class="line"><span class="function">shared_ptr&lt;T&gt; <span class="title">my_make_shared</span><span class="params">(Args&amp;&amp;... args)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">shared_ptr</span>&lt;T&gt;(<span class="keyword">new</span> <span class="built_in">T</span>(std::forward&lt;Args&gt;(args)...));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p><strong>追问 1</strong></p>
+<p>看下面代码，分别会调用哪个构造函数？为什么？</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">A</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">A</span>() &#123;&#125;</span><br><span class="line">    <span class="built_in">A</span>(<span class="type">const</span> A&amp;) &#123; cout &lt;&lt; <span class="string">&quot;copy\n&quot;</span>; &#125;</span><br><span class="line">    <span class="built_in">A</span>(A&amp;&amp;) &#123; cout &lt;&lt; <span class="string">&quot;move\n&quot;</span>; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function">A <span class="title">getObj</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    A a;</span><br><span class="line">    <span class="keyword">return</span> a;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    A a1;</span><br><span class="line">    A a2 = std::<span class="built_in">move</span>(a1);</span><br><span class="line">    A a3 = <span class="built_in">getObj</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>你要把：</p>
+<ul>
+<li><code>a2</code> 为什么是 move</li>
+<li><code>a3</code> 到底是 move、copy，还是直接省略构造<br> 讲清楚。</li>
+</ul>
+<p>追问 2</p>
+<p>为什么“一个有名字的右值引用变量，本身是左值”？</p>
+<p>比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">A&amp;&amp; x = A();</span><br><span class="line">foo(x);              // 这里 x 是左值还是右值？</span><br><span class="line">foo(std::move(x));   // 又是什么？</span><br></pre></td></tr></table></figure>
+
+<p>追问 3</p>
+<p>下面这段代码有问题吗？</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">template&lt;class T&gt;</span><br><span class="line">void wrapper(T&amp;&amp; arg) &#123;</span><br><span class="line">    process(arg);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>问题出在哪？如果 <code>arg</code> 原来传进来的是右值，会发生什么？</p>
+<h1 id="问题回答"><a href="#问题回答" class="headerlink" title="问题回答"></a>问题回答</h1><p>左值和右值更本质的区别，其实是<strong>表达式的值类别</strong>不同，也就是这个表达式求值以后，代表的是一个<strong>可持续存在、可被定位的对象身份</strong>，还是一个<strong>更偏向临时结果、可被拿来搬资源的值</strong>。所以它不是简单的“能不能取地址”。比如一个有名字的对象通常是左值，但“有名字”不是定义本身；同样，右值里也不只是“字面量”这么简单。</p>
+<p>如果按现代 C++ 更准确地分，值类别可以分成三类你最该记住的：<br> <strong>lvalue</strong>，也就是左值；<br> <strong>xvalue</strong>，叫将亡值；<br> <strong>prvalue</strong>，叫纯右值。</p>
+<p>其中右值其实是个大类，<strong>xvalue 和 prvalue 都属于右值</strong>。</p>
+<p>左值你可以理解成：有明确对象身份、生命周期比较稳定、可以被反复使用的表达式。<br> 比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int a = 10;</span><br></pre></td></tr></table></figure>
+
+<p>这里 <code>a</code> 就是左值。</p>
+<p><code>prvalue</code> 是纯右值，通常表示一个纯粹的值结果，很多时候是个临时值，比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">10</span><br><span class="line">a + b</span><br><span class="line">std::string(&quot;abc&quot;)</span><br></pre></td></tr></table></figure>
+
+<p>这些更像“算出来一个值”。</p>
+<p><code>xvalue</code> 是将亡值，它很关键，因为它表示：<strong>这个对象还有身份，但编译器知道你马上可以把它的资源拿走了</strong>。最典型的就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">std::move(a)</span><br></pre></td></tr></table></figure>
+
+<p>它返回出来的那个表达式就是 xvalue。<br> 所以很多人说“<code>move</code> 以后变成右值”，更精确一点应该说：<strong>变成将亡值</strong>。</p>
+<hr>
+<h2 id="为什么要引入右值引用"><a href="#为什么要引入右值引用" class="headerlink" title="为什么要引入右值引用"></a>为什么要引入右值引用</h2><p>右值引用最核心的意义，是为了支持<strong>移动语义</strong>和<strong>完美转发</strong>。</p>
+<p>在没有右值引用之前，临时对象也只能走拷贝。<br> 比如一个大字符串、一个大 vector，临时对象本来生命周期都快结束了，理论上可以直接把内部资源“偷”过来，但没有语言层支持，就只能老老实实拷贝，性能很差。</p>
+<p>右值引用出现以后，像下面这样：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::string s1 = <span class="string">&quot;hello&quot;</span>;</span><br><span class="line">std::string s2 = std::<span class="built_in">move</span>(s1);</span><br></pre></td></tr></table></figure>
+
+<p>这里就有机会走移动构造，而不是深拷贝。</p>
+<p>也就是说，右值引用的本质目的不是“多一种引用写法”，而是：</p>
+<p><strong>给“可以安全搬资源的对象”一个语言层标记。</strong></p>
+<hr>
+<h2 id="T-什么时候一定是右值引用，什么时候又不一定"><a href="#T-什么时候一定是右值引用，什么时候又不一定" class="headerlink" title="T&amp;&amp; 什么时候一定是右值引用，什么时候又不一定"></a>T&amp;&amp; 什么时候一定是右值引用，什么时候又不一定</h2><p>这个是面试特别爱追的点。</p>
+<p>如果你写的是一个<strong>确定类型</strong>，那 <code>T&amp;&amp;</code> 就是右值引用，比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">std::string&amp;&amp; r = std::string(&quot;abc&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>这里 <code>std::string&amp;&amp;</code> 就是标准的右值引用。</p>
+<p>但是如果它出现在<strong>模板参数推导</strong>里，比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">template&lt;class T&gt;</span><br><span class="line">void f(T&amp;&amp; x);</span><br></pre></td></tr></table></figure>
+
+<p>这里的 <code>T&amp;&amp;</code> 就<strong>不一定是右值引用</strong>，它可能是所谓的<strong>转发引用</strong>，以前也常叫万能引用。</p>
+<p>它的规则是：</p>
+<ul>
+<li>如果传进来的是左值，那么 <code>T</code> 会被推导成左值引用类型，最后参数类型会折叠成左值引用</li>
+<li>如果传进来的是右值，那么 <code>T</code> 才会被推导成普通类型，参数类型是右值引用</li>
+</ul>
+<p>比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">int a = 10;</span><br><span class="line">f(a);    // T 推导成 int&amp;，参数类型折叠成 int&amp;</span><br><span class="line">f(10);   // T 推导成 int，参数类型是 int&amp;&amp;</span><br></pre></td></tr></table></figure>
+
+<p>所以你不能一看到 <code>T&amp;&amp;</code> 就条件反射说“右值引用”，得先看它是不是处在<strong>类型推导语境</strong>里。</p>
+<hr>
+<h2 id="std-move-到底做了什么"><a href="#std-move-到底做了什么" class="headerlink" title="std::move 到底做了什么"></a>std::move 到底做了什么</h2><p><code>std::move</code> 这个名字特别容易误导。<br> 它<strong>本身不会真的移动任何东西</strong>。</p>
+<p>它做的事情本质上就是一次<strong>强制类型转换</strong>，把一个对象显式地转成“可以被当成右值使用”的形式。更准确地说，是转成对应的右值引用类型。</p>
+<p>你可以把它近似理解成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">template&lt;class T&gt;</span><br><span class="line">typename remove_reference&lt;T&gt;::type&amp;&amp; move(T&amp;&amp; t) &#123;</span><br><span class="line">    return static_cast&lt;typename remove_reference&lt;T&gt;::type&amp;&amp;&gt;(t);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以 <code>move</code> 本质就是：</p>
+<p><strong>把一个表达式强转成 xvalue，让后续重载解析优先匹配移动构造&#x2F;移动赋值。</strong></p>
+<p>真正发生移动的是后面那个构造函数或者赋值运算符，不是 <code>move</code> 本身。</p>
+<p>比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::string s1 = &quot;hello&quot;;</span><br><span class="line">std::string s2 = std::move(s1);</span><br></pre></td></tr></table></figure>
+
+<p>这里不是 <code>move</code> 把资源搬走了，而是 <code>string</code> 的移动构造函数看见你给的是右值，于是决定把资源接管过来。</p>
+<hr>
+<h2 id="一个对象被-move-之后处于什么状态"><a href="#一个对象被-move-之后处于什么状态" class="headerlink" title="一个对象被 move 之后处于什么状态"></a>一个对象被 move 之后处于什么状态</h2><p>这个也特别高频。</p>
+<p>标准上通常只能保证：<br> <strong>被移动后的对象仍然处于有效但未指定的状态。</strong></p>
+<p>“有效”表示它还能析构、还能赋新值、很多类型还能安全调用某些成员函数。<br> “未指定”表示你不能假设它原来内容还在，也不能假设它一定变空，除非这个类型文档明确承诺。</p>
+<p>比如很多标准库实现里，被 move 的 <code>std::string</code> 或 <code>std::vector</code> 往往会变空，但你面试里最好别说死。更稳的说法是：</p>
+<p><strong>可以销毁、可以重新赋值，但不要依赖它原先的值。</strong></p>
+<hr>
+<h2 id="什么是转发引用"><a href="#什么是转发引用" class="headerlink" title="什么是转发引用"></a>什么是转发引用</h2><p>转发引用就是刚才说的这种：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">template&lt;class T&gt;</span><br><span class="line">void f(T&amp;&amp; x);</span><br></pre></td></tr></table></figure>
+
+<p>只要满足两个条件：</p>
+<ol>
+<li>形式上是 <code>T&amp;&amp;</code></li>
+<li><code>T</code> 是需要推导出来的</li>
+</ol>
+<p>那它就是转发引用。</p>
+<p>它特殊的地方就在于：它能根据传入实参的值类别，自己变成左值引用或者右值引用。</p>
+<p>这个能力是完美转发的基础。</p>
+<hr>
+<h2 id="std-forward-和-std-move-的区别"><a href="#std-forward-和-std-move-的区别" class="headerlink" title="std::forward 和 std::move 的区别"></a>std::forward 和 std::move 的区别</h2><p>这个一定要分清。</p>
+<p><code>std::move</code> 是<strong>无条件地把对象转成右值</strong>。<br> 也就是说，不管你原来传进来的是左值还是右值，它都告诉编译器：“你把它当成可移动对象处理吧。”</p>
+<p>而 <code>std::forward</code> 是<strong>有条件地转发</strong>。<br> 它会根据模板参数 <code>T</code> 的推导结果，决定最后把它转成左值还是右值。</p>
+<p>所以：</p>
+<ul>
+<li><code>move</code> 的语义是“我明确要把它当右值用”</li>
+<li><code>forward</code> 的语义是“我想把它原本是什么类别，就继续保持什么类别传下去”</li>
+</ul>
+<hr>
+<h2 id="完美转发为什么能保持原本值类别"><a href="#完美转发为什么能保持原本值类别" class="headerlink" title="完美转发为什么能保持原本值类别"></a>完美转发为什么能保持原本值类别</h2><p>核心就在于两件事配合：</p>
+<p>第一，参数写成转发引用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">template&lt;class T&gt;</span><br><span class="line">void f(T&amp;&amp; x)</span><br></pre></td></tr></table></figure>
+
+<p>第二，转发时用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">std::forward&lt;T&gt;(x)</span><br></pre></td></tr></table></figure>
+
+<p>为什么这样就能保持值类别？因为：</p>
+<ul>
+<li>如果实参原来是左值，那么 <code>T</code> 会推导成 <code>U&amp;</code></li>
+<li>这时 <code>forward&lt;T&gt;(x)</code> 本质上会转回 <code>U&amp;</code></li>
+<li>所以继续作为左值传下去</li>
+<li>如果实参原来是右值，那么 <code>T</code> 会推导成 <code>U</code></li>
+<li>这时 <code>forward&lt;T&gt;(x)</code> 才会转成 <code>U&amp;&amp;</code></li>
+<li>所以继续作为右值传下去</li>
+</ul>
+<p>也就是说，<code>forward</code> 不是“神奇保留”，而是利用了<strong>模板推导 + 引用折叠</strong>。</p>
+<p>引用折叠规则你可以顺口提一句：</p>
+<ul>
+<li><code>&amp; + &amp; -&gt; &amp;</code></li>
+<li><code>&amp; + &amp;&amp; -&gt; &amp;</code></li>
+<li><code>&amp;&amp; + &amp; -&gt; &amp;</code></li>
+<li><code>&amp;&amp; + &amp;&amp; -&gt; &amp;&amp;</code></li>
+</ul>
+<p>本质上就是：<strong>只要里面有左值引用，最后通常折叠成左值引用；只有全是右值，才是右值引用。</strong></p>
+<hr>
+<h2 id="为什么这个模板里必须用-forward，不能无脑用-move"><a href="#为什么这个模板里必须用-forward，不能无脑用-move" class="headerlink" title="为什么这个模板里必须用 forward，不能无脑用 move"></a>为什么这个模板里必须用 forward，不能无脑用 move</h2><p>你给的这个例子非常典型：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">template&lt;class T, class... Args&gt;</span><br><span class="line">shared_ptr&lt;T&gt; my_make_shared(Args&amp;&amp;... args) &#123;</span><br><span class="line">    return shared_ptr&lt;T&gt;(new T(std::forward&lt;Args&gt;(args)...));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里 <code>Args&amp;&amp;... args</code> 里的 <code>args</code> 虽然类型可能是右值引用，但要注意一件非常重要的事：</p>
+<p><strong>只要一个变量有名字，它在表达式里就是左值。</strong></p>
+<p>所以在函数体里，<code>args</code> 本身全都是左值表达式。</p>
+<p>这时候如果你直接写：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">new T(args...)</span><br></pre></td></tr></table></figure>
+
+<p>那你会把所有参数都当左值传给 <code>T</code> 的构造函数，右值信息全丢了。</p>
+<p>所以必须用 <code>forward&lt;Args&gt;(args)...</code>，把每个参数原本的值类别恢复出来。</p>
+<p>如果你无脑改成 <code>move</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">new T(std::move(args)...)</span><br></pre></td></tr></table></figure>
+
+<p>问题是：它会把<strong>所有参数都强行转成右值</strong>。</p>
+<p>这样如果调用者本来传进来的是左值，比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::string s = &quot;hello&quot;;</span><br><span class="line">my_make_shared&lt;MyClass&gt;(s);</span><br></pre></td></tr></table></figure>
+
+<p>你这里却把 <code>s</code> 强行 move 掉了，那就把调用者的左值资源偷偷搬走了。这通常不是调用者预期，也破坏了接口语义。</p>
+<p>所以这里必须用 <code>forward</code>，不能无脑 <code>move</code>。因为这个函数的职责不是“消费参数”，而是“把参数原样转交给 <code>T</code> 的构造函数”。</p>
+<p>你可以把这句背下来：</p>
+<p><strong><code>move</code> 是单方面声明“我现在就要把它当右值处理”；<code>forward</code> 是忠实转交“调用者当初传进来是什么，我就继续保持什么”。</strong></p>
+<hr>
+<h2 id="收尾"><a href="#收尾" class="headerlink" title="收尾"></a>收尾</h2><p>左值右值本质上不是“有没有名字”这么简单，而是表达式的值类别问题。左值强调对象身份和可定位性，右值更强调可被移动的值，其中右值又分纯右值和将亡值。右值引用的引入主要是为了支持移动语义和完美转发。<code>std::move</code> 本质是把表达式强制转成右值引用，它自己不移动对象，真正移动的是后续匹配到的移动构造或移动赋值。被 move 之后的对象一般是有效但未指定状态。模板里的 <code>T&amp;&amp;</code> 在类型推导场景下是转发引用，不一定真的是右值引用。<code>std::forward</code> 和 <code>std::move</code> 最大的区别在于，<code>forward</code> 会保留实参原本的值类别，而 <code>move</code> 是无条件转成右值，所以像 <code>my_make_shared</code> 这种转发参数的模板必须用 <code>forward</code>，不能无脑 <code>move</code>。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/categories/">分类</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B7%A6%E5%80%BC%E3%80%81%E5%8F%B3%E5%80%BC%E3%80%81%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8%E3%80%81std-move%E3%80%81%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91"><span class="toc-number">1.</span> <span class="toc-text">左值、右值、右值引用、std::move、完美转发</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E5%9B%9E%E7%AD%94"><span class="toc-number">2.</span> <span class="toc-text">问题回答</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%BC%95%E5%85%A5%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8"><span class="toc-number">2.1.</span> <span class="toc-text">为什么要引入右值引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#T-%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E4%B8%80%E5%AE%9A%E6%98%AF%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8%EF%BC%8C%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E5%8F%88%E4%B8%8D%E4%B8%80%E5%AE%9A"><span class="toc-number">2.2.</span> <span class="toc-text">T&amp;&amp; 什么时候一定是右值引用，什么时候又不一定</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#std-move-%E5%88%B0%E5%BA%95%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88"><span class="toc-number">2.3.</span> <span class="toc-text">std::move 到底做了什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E5%AF%B9%E8%B1%A1%E8%A2%AB-move-%E4%B9%8B%E5%90%8E%E5%A4%84%E4%BA%8E%E4%BB%80%E4%B9%88%E7%8A%B6%E6%80%81"><span class="toc-number">2.4.</span> <span class="toc-text">一个对象被 move 之后处于什么状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%BD%AC%E5%8F%91%E5%BC%95%E7%94%A8"><span class="toc-number">2.5.</span> <span class="toc-text">什么是转发引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#std-forward-%E5%92%8C-std-move-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">2.6.</span> <span class="toc-text">std::forward 和 std::move 的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91%E4%B8%BA%E4%BB%80%E4%B9%88%E8%83%BD%E4%BF%9D%E6%8C%81%E5%8E%9F%E6%9C%AC%E5%80%BC%E7%B1%BB%E5%88%AB"><span class="toc-number">2.7.</span> <span class="toc-text">完美转发为什么能保持原本值类别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%99%E4%B8%AA%E6%A8%A1%E6%9D%BF%E9%87%8C%E5%BF%85%E9%A1%BB%E7%94%A8-forward%EF%BC%8C%E4%B8%8D%E8%83%BD%E6%97%A0%E8%84%91%E7%94%A8-move"><span class="toc-number">2.8.</span> <span class="toc-text">为什么这个模板里必须用 forward，不能无脑用 move</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%94%B6%E5%B0%BE"><span class="toc-number">2.9.</span> <span class="toc-text">收尾</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&text=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&title=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&is_video=false&description=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=左值、右值、右值引用、std::move、完美转发问题&body=Check out this article: http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&title=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&title=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&title=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&title=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&name=左值、右值、右值引用、std::move、完美转发问题&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/04/04/c++/%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8/&t=左值、右值、右值引用、std::move、完美转发问题"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2025-2026
+    LightningJie
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
