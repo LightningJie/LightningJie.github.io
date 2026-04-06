@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="thread、mutex、condition_variable、atomic、C++ 内存模型 std::thread 是什么，创建线程后如果既不 join 也不 detach 会怎样 mutex 的作用是什么，为什么要加锁 lock_guard 和 unique_lock 的区别 condition_variable 是干什么的，为什么它通常要配合互斥锁一起用 为什么 wait 要写成这种形式：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="thread、mutex、condition_variable、atomic、C++ 内存模型">
+<meta property="og:url" content="http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/index.html">
+<meta property="og:site_name" content="LightningJie 的博客">
+<meta property="og:description" content="thread、mutex、condition_variable、atomic、C++ 内存模型 std::thread 是什么，创建线程后如果既不 join 也不 detach 会怎样 mutex 的作用是什么，为什么要加锁 lock_guard 和 unique_lock 的区别 condition_variable 是干什么的，为什么它通常要配合互斥锁一起用 为什么 wait 要写成这种形式：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-04-07T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-06T15:15:34.174Z">
+<meta property="article:author" content="LightningJie">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>thread、mutex、condition_variable、atomic、C++ 内存模型</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="LightningJie 的博客" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2026/04/07/c++/unordered_map%20%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/04/06/c++/vector%20%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%A9%E5%AE%B9%E7%9A%84/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&text=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&title=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&is_video=false&description=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=thread、mutex、condition_variable、atomic、C++ 内存模型&body=Check out this article: http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&title=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&title=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&title=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&title=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&name=thread、mutex、condition_variable、atomic、C++ 内存模型&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&t=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#thread%E3%80%81mutex%E3%80%81condition-variable%E3%80%81atomic%E3%80%81C-%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.</span> <span class="toc-text">thread、mutex、condition_variable、atomic、C++ 内存模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81std-thread-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E5%A6%82%E6%9E%9C%E6%97%A2%E4%B8%8D-join-%E4%B9%9F%E4%B8%8D-detach-%E4%BC%9A%E6%80%8E%E6%A0%B7"><span class="toc-number">1.1.</span> <span class="toc-text">一、std::thread 是什么，如果既不 join 也不 detach 会怎样</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81mutex-%E7%9A%84%E4%BD%9C%E7%94%A8%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%8A%A0%E9%94%81"><span class="toc-number">1.2.</span> <span class="toc-text">二、mutex 的作用是什么，为什么要加锁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81lock-guard-%E5%92%8C-unique-lock-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">1.3.</span> <span class="toc-text">三、lock_guard 和 unique_lock 的区别</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#lock-guard"><span class="toc-number">1.3.1.</span> <span class="toc-text">lock_guard</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#unique-lock"><span class="toc-number">1.3.2.</span> <span class="toc-text">unique_lock</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81condition-variable-%E6%98%AF%E5%B9%B2%E4%BB%80%E4%B9%88%E7%9A%84%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%9A%E5%B8%B8%E8%A6%81%E9%85%8D%E5%90%88%E4%BA%92%E6%96%A5%E9%94%81"><span class="toc-number">1.4.</span> <span class="toc-text">四、condition_variable 是干什么的，为什么通常要配合互斥锁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88-wait-%E8%A6%81%E5%86%99%E6%88%90-cv-wait-lock-return-%E6%9D%A1%E4%BB%B6%E6%88%90%E7%AB%8B"><span class="toc-number">1.5.</span> <span class="toc-text">五、为什么 wait 要写成 cv.wait(lock, [] { return 条件成立; });</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E9%98%B2%E6%AD%A2%E8%99%9A%E5%81%87%E5%94%A4%E9%86%92"><span class="toc-number">1.5.1.</span> <span class="toc-text">1. 防止虚假唤醒</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E9%98%B2%E6%AD%A2%E8%A2%AB%E5%94%A4%E9%86%92%E6%97%B6%E6%9D%A1%E4%BB%B6%E5%8F%88%E8%A2%AB%E5%88%AB%E7%9A%84%E7%BA%BF%E7%A8%8B%E6%8A%A2%E5%85%88%E6%94%B9%E6%8E%89"><span class="toc-number">1.5.2.</span> <span class="toc-text">2. 防止被唤醒时条件又被别的线程抢先改掉</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81atomic-%E5%92%8C-mutex-%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%8C%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8%E5%93%AA%E4%B8%AA"><span class="toc-number">1.6.</span> <span class="toc-text">六、atomic 和 mutex 的区别，什么时候用哪个</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#atomic"><span class="toc-number">1.6.1.</span> <span class="toc-text">atomic</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mutex"><span class="toc-number">1.6.2.</span> <span class="toc-text">mutex</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88-atomic-cnt-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%EF%BC%8C%E4%BD%86-vector-%E4%B8%8D%E6%98%AF%E6%94%B9%E6%88%90%E5%8E%9F%E5%AD%90%E5%B0%B1%E8%83%BD%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8"><span class="toc-number">1.7.</span> <span class="toc-text">七、为什么 atomic&lt;int&gt; cnt++ 线程安全，但 vector 不是改成原子就能线程安全</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%EF%BC%88race-condition%EF%BC%89"><span class="toc-number">1.8.</span> <span class="toc-text">八、什么是竞态条件（race condition）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81C-%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E9%87%8C%E5%87%A0%E4%B8%AA%E5%B8%B8%E8%A7%81%E5%86%85%E5%AD%98%E5%BA%8F%E7%9A%84%E7%9B%B4%E8%A7%82%E7%90%86%E8%A7%A3"><span class="toc-number">1.9.</span> <span class="toc-text">九、C++ 内存模型里几个常见内存序的直观理解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#memory-order-relaxed"><span class="toc-number">1.9.1.</span> <span class="toc-text">memory_order_relaxed</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#memory-order-release"><span class="toc-number">1.9.2.</span> <span class="toc-text">memory_order_release</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#memory-order-acquire"><span class="toc-number">1.9.3.</span> <span class="toc-text">memory_order_acquire</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#memory-order-seq-cst"><span class="toc-number">1.9.4.</span> <span class="toc-text">memory_order_seq_cst</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-1%EF%BC%9A%E4%B8%A4%E4%B8%AA%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%97%B6%E8%B7%91%E7%BB%93%E6%9E%9C%E5%8F%AF%E8%83%BD%E4%B8%8D%E6%98%AF-200000"><span class="toc-number">2.</span> <span class="toc-text">追问 1：两个线程同时跑结果可能不是 200000</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-2%EF%BC%9A%E6%94%B9%E6%88%90-std-atomic-x-0-%E6%98%AF%E4%B8%8D%E6%98%AF%E6%89%80%E6%9C%89%E5%B9%B6%E5%8F%91%E9%97%AE%E9%A2%98%E9%83%BD%E8%A7%A3%E5%86%B3%E4%BA%86%EF%BC%9F"><span class="toc-number">3.</span> <span class="toc-text">追问 2：改成 std::atomic&lt;int&gt; x &#x3D; 0; 是不是所有并发问题都解决了？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-3%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88-condition-variable-%E5%BF%85%E9%A1%BB%E6%90%AD%E9%85%8D-unique-lock%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF-lock-guard"><span class="toc-number">4.</span> <span class="toc-text">追问 3：为什么 condition_variable 必须搭配 unique_lock&lt;mutex&gt;，而不是 lock_guard&lt;mutex&gt;</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-4%EF%BC%9A%E7%94%9F%E4%BA%A7%E8%80%85%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%9E%8B%E6%80%8E%E4%B9%88%E5%86%99"><span class="toc-number">5.</span> <span class="toc-text">追问 4：生产者消费者模型怎么写</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-5%EF%BC%9A%E4%BB%80%E4%B9%88%E6%98%AF%E6%AD%BB%E9%94%81%EF%BC%8C%E5%B8%B8%E8%A7%81%E6%88%90%E5%9B%A0%E6%9C%89%E5%93%AA%E4%BA%9B%EF%BC%9F%E5%B7%A5%E7%A8%8B%E9%87%8C%E6%80%8E%E4%B9%88%E9%81%BF%E5%85%8D%EF%BC%9F"><span class="toc-number">6.</span> <span class="toc-text">追问 5：什么是死锁，常见成因有哪些？工程里怎么避免？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%A4%9A%E6%8A%8A%E9%94%81%E8%8E%B7%E5%8F%96%E9%A1%BA%E5%BA%8F%E4%B8%8D%E4%B8%80%E8%87%B4"><span class="toc-number">6.1.</span> <span class="toc-text">1. 多把锁获取顺序不一致</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%8C%81%E9%94%81%E7%AD%89%E5%BE%85"><span class="toc-number">6.2.</span> <span class="toc-text">2. 持锁等待</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%BF%98%E8%AE%B0%E9%87%8A%E6%94%BE"><span class="toc-number">6.3.</span> <span class="toc-text">3. 忘记释放</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%BE%AA%E7%8E%AF%E7%AD%89%E5%BE%85"><span class="toc-number">6.4.</span> <span class="toc-text">4. 循环等待</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-6%EF%BC%9Ashared-mutex-%E6%98%AF%E5%B9%B2%E4%BB%80%E4%B9%88%E7%9A%84%EF%BC%8C%E4%BB%80%E4%B9%88%E5%9C%BA%E6%99%AF%E4%B8%8B%E6%9B%B4%E5%90%88%E9%80%82"><span class="toc-number">7.</span> <span class="toc-text">追问 6：shared_mutex 是干什么的，什么场景下更合适</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-7%EF%BC%9A%E4%B8%8B%E9%9D%A2%E4%BB%A3%E7%A0%81%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E5%AE%89%E5%85%A8"><span class="toc-number">8.</span> <span class="toc-text">追问 7：下面代码为什么不安全</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%95%B0%E6%8D%AE%E7%AB%9E%E4%BA%89"><span class="toc-number">8.1.</span> <span class="toc-text">1. 数据竞争</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BC%96%E8%AF%91%E5%99%A8-CPU-%E9%87%8D%E6%8E%92"><span class="toc-number">8.2.</span> <span class="toc-text">2. 编译器&#x2F;CPU 重排</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%8F%AF%E8%A7%81%E6%80%A7%E9%97%AE%E9%A2%98"><span class="toc-number">8.3.</span> <span class="toc-text">3. 可见性问题</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-8%EF%BC%9A%E4%BB%80%E4%B9%88%E5%8F%AB-happens-before"><span class="toc-number">9.</span> <span class="toc-text">追问 8：什么叫 happens-before</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E8%BF%BD%E9%97%AE-1%EF%BC%9Ajoin-%E5%92%8C-detach-%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%8C%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99-detach-%E5%8D%B1%E9%99%A9"><span class="toc-number">9.1.</span> <span class="toc-text">小追问 1：join() 和 detach() 的区别，什么时候 detach 危险</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#join"><span class="toc-number">9.1.1.</span> <span class="toc-text">join()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#detach"><span class="toc-number">9.1.2.</span> <span class="toc-text">detach()</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E8%BF%BD%E9%97%AE-2%EF%BC%9A%E8%87%AA%E6%97%8B%E9%94%81%E5%92%8C%E4%BA%92%E6%96%A5%E9%94%81%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%8C%E5%90%84%E8%87%AA%E9%80%82%E5%90%88%E4%BB%80%E4%B9%88%E5%9C%BA%E6%99%AF"><span class="toc-number">9.2.</span> <span class="toc-text">小追问 2：自旋锁和互斥锁的区别，各自适合什么场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E6%97%8B%E9%94%81"><span class="toc-number">9.2.1.</span> <span class="toc-text">自旋锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%92%E6%96%A5%E9%94%81"><span class="toc-number">9.2.2.</span> <span class="toc-text">互斥锁</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E8%BF%BD%E9%97%AE-3%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E2%80%9C%E5%8E%9F%E5%AD%90%E5%8F%98%E9%87%8F%E6%97%A0%E9%94%81%E2%80%9D%E4%B8%8D%E4%BB%A3%E8%A1%A8%E2%80%9C%E6%B2%A1%E6%9C%89-CPU-%E6%88%90%E6%9C%AC%E2%80%9D"><span class="toc-number">9.3.</span> <span class="toc-text">小追问 3：为什么“原子变量无锁”不代表“没有 CPU 成本”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">9.4.</span> <span class="toc-text">总结</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        thread、mutex、condition_variable、atomic、C++ 内存模型
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">LightningJie</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-04-07T02:00:00.000Z" class="dt-published" itemprop="datePublished">2026-04-07</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/c/">c++</a> › <a class="category-link" href="/categories/c/%E9%9A%8F%E7%AC%94/">随笔</a>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="thread、mutex、condition-variable、atomic、C-内存模型"><a href="#thread、mutex、condition-variable、atomic、C-内存模型" class="headerlink" title="thread、mutex、condition_variable、atomic、C++ 内存模型"></a>thread、mutex、condition_variable、atomic、C++ 内存模型</h1><ol>
+<li><code>std::thread</code> 是什么，创建线程后如果既不 <code>join</code> 也不 <code>detach</code> 会怎样</li>
+<li><code>mutex</code> 的作用是什么，为什么要加锁</li>
+<li><code>lock_guard</code> 和 <code>unique_lock</code> 的区别</li>
+<li><code>condition_variable</code> 是干什么的，为什么它通常要配合互斥锁一起用</li>
+<li>为什么 <code>wait</code> 要写成这种形式：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cv.wait(lock, [] &#123; return 条件成立; &#125;);</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>什么叫虚假唤醒，为什么不能 <code>wait</code> 一次醒了就直接往下执行</li>
+<li><code>atomic</code> 和 <code>mutex</code> 的区别是什么，什么时候适合用哪个</li>
+<li><code>atomic&lt;int&gt; cnt++</code> 为什么通常是线程安全的，但 <code>vector</code> 不是改成原子就能线程安全</li>
+<li>什么是竞态条件（race condition）</li>
+<li>C++ 内存模型里，<code>memory_order_relaxed</code>、<code>acquire</code>、<code>release</code>、<code>seq_cst</code> 大概是什么意思</li>
+</ol>
+<hr>
+<p>下面开始追问，按真实面试官的节奏压你。</p>
+<p>追问 1</p>
+<p>请你说一下下面这段代码为什么有问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">int x = 0;</span><br><span class="line"></span><br><span class="line">void f() &#123;</span><br><span class="line">    for (int i = 0; i &lt; 100000; i++) &#123;</span><br><span class="line">        x++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>两个线程同时跑 <code>f()</code>，最后结果为什么可能不是 <code>200000</code>？</p>
+<p>我希望你能讲到：</p>
+<ul>
+<li><code>x++</code> 不是原子操作</li>
+<li>它至少包含读、改、写</li>
+<li>多线程交错会导致丢失更新</li>
+</ul>
+<hr>
+<p>追问 2</p>
+<p>那如果改成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">std::atomic&lt;int&gt; x = 0;</span><br></pre></td></tr></table></figure>
+
+<p>是不是所有并发问题都解决了？</p>
+<p>你要说明：</p>
+<ul>
+<li>原子变量只能保证这个变量本身的原子读写&#x2F;读改写</li>
+<li>不能自动保证一组复合操作的整体原子性</li>
+<li>不能替代所有锁</li>
+</ul>
+<hr>
+<p>追问 3</p>
+<p>为什么 <code>condition_variable</code> 必须搭配 <code>unique_lock&lt;mutex&gt;</code>，而不是 <code>lock_guard&lt;mutex&gt;</code>？</p>
+<hr>
+<p>追问 4</p>
+<p>生产者消费者模型你会怎么写？</p>
+<p>至少讲清楚这几个同步关系：</p>
+<ul>
+<li>队列为空时，消费者要等待</li>
+<li>队列满时，生产者要等待</li>
+<li>为什么判断条件要放在 <code>while</code> 或谓词里，而不是 <code>if</code></li>
+</ul>
+<hr>
+<p>追问 5</p>
+<p>什么是死锁？常见成因有哪些？</p>
+<p>你至少说到：</p>
+<ul>
+<li>多把锁获取顺序不一致</li>
+<li>持锁等待</li>
+<li>忘记释放</li>
+<li>循环等待</li>
+</ul>
+<p>然后我会继续追问：</p>
+<blockquote>
+<p>工程里怎么避免死锁？</p>
+</blockquote>
+<hr>
+<p>追问 6</p>
+<p><code>shared_mutex</code> 是干什么的？什么场景下它比普通 <code>mutex</code> 更合适？</p>
+<hr>
+<p>追问 7</p>
+<p>下面这段代码有没有问题？</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">bool ready = false;</span><br><span class="line">int data = 0;</span><br><span class="line"></span><br><span class="line">void producer() &#123;</span><br><span class="line">    data = 42;</span><br><span class="line">    ready = true;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void consumer() &#123;</span><br><span class="line">    while (!ready) &#123;&#125;</span><br><span class="line">    cout &lt;&lt; data &lt;&lt; endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为什么这段代码在多线程下不一定安全？</p>
+<p>我想听到你讲：</p>
+<ul>
+<li>数据竞争</li>
+<li>编译器重排 &#x2F; CPU 重排</li>
+<li>可见性问题</li>
+<li>为什么需要原子变量或同步原语建立 happens-before</li>
+</ul>
+<hr>
+<p>追问 8</p>
+<p>什么叫 happens-before？</p>
+<p>你不用背标准定义，但你要能讲明白：</p>
+<blockquote>
+<p>一个线程里的写，为什么另一个线程“保证能看到”，这个保证是怎么建立起来的？</p>
+</blockquote>
+<hr>
+<p>小追问 1</p>
+<p><code>join()</code> 和 <code>detach()</code> 的区别是什么？什么时候 <code>detach</code> 危险？</p>
+<p>小追问 2</p>
+<p>自旋锁和互斥锁的区别是什么？各自适合什么场景？</p>
+<p>小追问 3</p>
+<p>为什么说“原子变量无锁”不代表“没有 CPU 成本”？</p>
+<h2 id="一、std-thread-是什么，如果既不-join-也不-detach-会怎样"><a href="#一、std-thread-是什么，如果既不-join-也不-detach-会怎样" class="headerlink" title="一、std::thread 是什么，如果既不 join 也不 detach 会怎样"></a>一、<code>std::thread</code> 是什么，如果既不 <code>join</code> 也不 <code>detach</code> 会怎样</h2><p><code>std::thread</code> 是 C++ 标准库对线程对象的封装。<br> 你创建一个 <code>std::thread</code>，本质上就是启动了一个新的执行流，同时当前线程继续往下跑。</p>
+<p>比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">std::thread t(f);</span><br></pre></td></tr></table></figure>
+
+<p>这里 <code>t</code> 只是“管理这个线程的对象句柄”，不是线程本身。</p>
+<p>最关键的一点是：</p>
+<p><strong>一个 <code>std::thread</code> 对象在析构前，必须处于不可 join 状态。</strong></p>
+<p>也就是说，你要么：</p>
+<ul>
+<li><code>t.join()</code>，等待线程执行完</li>
+<li>要么 <code>t.detach()</code>，让线程和这个对象分离，后台独立运行</li>
+<li>典型使用场景<ol>
+<li>日志线程:后台默默写日志，主线程不用等</li>
+<li>心跳包线程:定时发心跳，不需要阻塞主逻辑</li>
+<li>监控线程、后台刷新线程</li>
+<li>临时任务，做完就消失，不需要返回结果</li>
+</ol>
+</li>
+</ul>
+<p>如果一个线程对象还是 <code>joinable()</code>，你却让它直接析构了，那么程序会直接：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">std::terminate()</span><br></pre></td></tr></table></figure>
+
+<p>这点面试里一定要说清楚，不是“资源泄漏”这么轻，而是直接终止程序。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="comment">// 必须包含线程头文件</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;chrono&gt;</span>  <span class="comment">// 用于延时</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. 普通函数：线程要执行的任务</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">print_task</span><span class="params">(<span class="type">int</span> num, <span class="type">const</span> std::string&amp; str)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 模拟耗时任务</span></span><br><span class="line">    std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">seconds</span>(<span class="number">1</span>));</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;线程执行：数字=&quot;</span> &lt;&lt; num &lt;&lt; <span class="string">&quot;，字符串=&quot;</span> &lt;&lt; str &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. 仿函数（可选）</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Task</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">operator</span><span class="params">()</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;仿函数线程执行&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;主线程开始&quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ====================== 用法1：线程执行普通函数 ======================</span></span><br><span class="line">    <span class="comment">// 创建线程：第一个参数是函数名，后面是函数参数</span></span><br><span class="line">    <span class="function">std::thread <span class="title">t1</span><span class="params">(print_task, <span class="number">100</span>, <span class="string">&quot;Hello Thread&quot;</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ====================== 用法2：线程执行 Lambda 表达式 ======================</span></span><br><span class="line">    <span class="function">std::thread <span class="title">t2</span><span class="params">([]() &#123;</span></span></span><br><span class="line"><span class="params"><span class="function">        std::this_thread::sleep_for(std::chrono::milliseconds(<span class="number">500</span>));</span></span></span><br><span class="line"><span class="params"><span class="function">        std::cout &lt;&lt; <span class="string">&quot;Lambda 线程执行&quot;</span> &lt;&lt; std::endl;</span></span></span><br><span class="line"><span class="params"><span class="function">    &#125;)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ====================== 用法3：线程执行仿函数 ======================</span></span><br><span class="line">    Task task;</span><br><span class="line">    <span class="function">std::thread <span class="title">t3</span><span class="params">(task)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待线程执行完毕（必须写，否则主线程退出会导致子线程崩溃）</span></span><br><span class="line">    t<span class="number">1.</span><span class="built_in">join</span>();</span><br><span class="line">    t<span class="number">2.</span><span class="built_in">join</span>();</span><br><span class="line">    t<span class="number">3.</span><span class="built_in">join</span>();</span><br><span class="line"></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;主线程结束&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="二、mutex-的作用是什么，为什么要加锁"><a href="#二、mutex-的作用是什么，为什么要加锁" class="headerlink" title="二、mutex 的作用是什么，为什么要加锁"></a>二、<code>mutex</code> 的作用是什么，为什么要加锁</h2><p><code>mutex</code> 的作用是做<strong>互斥访问</strong>。<br> 也就是同一时刻只允许一个线程进入某段临界区，避免多个线程同时修改共享数据。</p>
+<p>为什么要加锁？因为很多操作看起来是一句代码，实际上不是原子的。</p>
+<p>比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">x++;</span><br></pre></td></tr></table></figure>
+
+<p>底层至少可以理解成：</p>
+<ol>
+<li>读 <code>x</code></li>
+<li><code>x + 1</code></li>
+<li>写回 <code>x</code></li>
+</ol>
+<p>如果两个线程同时做，就可能互相覆盖，导致结果错乱。<br> 加锁的本质就是把这一段复合操作包成“同一时刻只能一个线程做”。</p>
+<hr>
+<h2 id="三、lock-guard-和-unique-lock-的区别"><a href="#三、lock-guard-和-unique-lock-的区别" class="headerlink" title="三、lock_guard 和 unique_lock 的区别"></a>三、<code>lock_guard</code> 和 <code>unique_lock</code> 的区别</h2><h3 id="lock-guard"><a href="#lock-guard" class="headerlink" title="lock_guard"></a><code>lock_guard</code></h3><p>最轻量，典型 RAII 锁。构造时加锁，析构时解锁。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">std::lock_guard&lt;std::mutex&gt; lg(mtx);</span><br></pre></td></tr></table></figure>
+
+<p>优点是简单、安全、开销小。<br> 适合那种“进入作用域就加锁，离开作用域就解锁”的固定场景。</p>
+<h3 id="unique-lock"><a href="#unique-lock" class="headerlink" title="unique_lock"></a><code>unique_lock</code></h3><p>更灵活。它也能 RAII 管锁，但还支持：</p>
+<ul>
+<li>延迟加锁</li>
+<li>手动 <code>unlock()</code> &#x2F; <code>lock()</code></li>
+<li>移动语义</li>
+<li>配合 <code>condition_variable::wait</code></li>
+</ul>
+<p>比如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::unique_lock&lt;std::mutex&gt; <span class="title">lk</span><span class="params">(mtx)</span></span>;</span><br><span class="line">lk.<span class="built_in">unlock</span>();</span><br><span class="line">lk.<span class="built_in">lock</span>();</span><br></pre></td></tr></table></figure>
+
+<p>所以区别一句话概括就是：</p>
+<p><strong><code>lock_guard</code> 更轻更简单，<code>unique_lock</code> 更重但更灵活。</strong></p>
+<hr>
+<h2 id="四、condition-variable-是干什么的，为什么通常要配合互斥锁"><a href="#四、condition-variable-是干什么的，为什么通常要配合互斥锁" class="headerlink" title="四、condition_variable 是干什么的，为什么通常要配合互斥锁"></a>四、<code>condition_variable</code> 是干什么的，为什么通常要配合互斥锁</h2><p><code>condition_variable</code> 是用来做<strong>线程间等待&#x2F;通知</strong>的。<br> 它解决的不是“互斥”问题，而是“条件还不满足时别傻等，先睡眠；条件满足了再唤醒”。</p>
+<p>典型场景就是生产者消费者：</p>
+<ul>
+<li>队列空了，消费者不能继续取，要等</li>
+<li>队列满了，生产者不能继续放，也要等</li>
+</ul>
+<p>为什么它要配合互斥锁？因为“判断条件”和“进入等待”这两个动作必须和共享状态保护在一起，否则会丢通知或者看见不一致状态。</p>
+<p>所以典型写法是：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cv.<span class="built_in">wait</span>(lock, [] &#123; <span class="keyword">return</span> 条件成立; &#125;);</span><br></pre></td></tr></table></figure>
+
+<p>这里锁不是装饰品，而是为了保护那个“条件变量关联的共享状态”。</p>
+<hr>
+<h2 id="五、为什么-wait-要写成-cv-wait-lock-return-条件成立"><a href="#五、为什么-wait-要写成-cv-wait-lock-return-条件成立" class="headerlink" title="五、为什么 wait 要写成 cv.wait(lock, [] { return 条件成立; });"></a>五、为什么 <code>wait</code> 要写成 <code>cv.wait(lock, [] { return 条件成立; });</code></h2><p>因为 <code>wait</code> 不是“醒了就一定能继续执行”。</p>
+<p>它正确语义应该是：</p>
+<p><strong>一直等到条件真的成立。</strong></p>
+<p>所以推荐写法是谓词版：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cv.wait(lock, [] &#123; return !q.empty(); &#125;);</span><br></pre></td></tr></table></figure>
+
+<p>这等价于内部循环检查：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">while (!条件成立) &#123;</span><br><span class="line">    cv.wait(lock);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样做有两个原因：</p>
+<h3 id="1-防止虚假唤醒"><a href="#1-防止虚假唤醒" class="headerlink" title="1. 防止虚假唤醒"></a>1. 防止虚假唤醒</h3><p>也就是线程可能在没有满足条件、甚至没人真正发出有效通知的情况下醒来。</p>
+<h3 id="2-防止被唤醒时条件又被别的线程抢先改掉"><a href="#2-防止被唤醒时条件又被别的线程抢先改掉" class="headerlink" title="2. 防止被唤醒时条件又被别的线程抢先改掉"></a>2. 防止被唤醒时条件又被别的线程抢先改掉</h3><p>比如多个消费者都被唤醒，但队列里只够一个人取。<br> 第一个线程取完后，第二个线程醒来时条件又不成立了。</p>
+<p>所以不能写成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">if (!条件) cv.wait(lock);</span><br></pre></td></tr></table></figure>
+
+<p>而要写成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">while (!条件) cv.wait(lock);</span><br></pre></td></tr></table></figure>
+
+<p>或者直接用带谓词版本。</p>
+<hr>
+<h2 id="六、atomic-和-mutex-的区别，什么时候用哪个"><a href="#六、atomic-和-mutex-的区别，什么时候用哪个" class="headerlink" title="六、atomic 和 mutex 的区别，什么时候用哪个"></a>六、<code>atomic</code> 和 <code>mutex</code> 的区别，什么时候用哪个</h2><h3 id="atomic"><a href="#atomic" class="headerlink" title="atomic"></a><code>atomic</code></h3><p>适合保护<strong>单个原子变量</strong>的读写或读改写，比如计数器、标志位、简单状态位。</p>
+<p>比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::atomic&lt;int&gt; cnt&#123;0&#125;;</span><br><span class="line">cnt++;</span><br></pre></td></tr></table></figure>
+
+<p>这通常是线程安全的，因为这个自增是原子读改写。</p>
+<h3 id="mutex"><a href="#mutex" class="headerlink" title="mutex"></a><code>mutex</code></h3><p>适合保护<strong>一段复合逻辑</strong>或者<strong>多个共享变量之间的一致性关系</strong>。</p>
+<p>比如：</p>
+<ul>
+<li>修改 <code>vector</code></li>
+<li>维护 map 和 count 的同步关系</li>
+<li>先检查再更新</li>
+<li>一组变量要一起保持一致</li>
+</ul>
+<p>所以一句话就是：</p>
+<p><strong>原子适合单变量、短小同步；锁适合复杂临界区和复合不变量。</strong></p>
+<hr>
+<h2 id="七、为什么-atomic-cnt-线程安全，但-vector-不是改成原子就能线程安全"><a href="#七、为什么-atomic-cnt-线程安全，但-vector-不是改成原子就能线程安全" class="headerlink" title="七、为什么 atomic&lt;int&gt; cnt++ 线程安全，但 vector 不是改成原子就能线程安全"></a>七、为什么 <code>atomic&lt;int&gt; cnt++</code> 线程安全，但 <code>vector</code> 不是改成原子就能线程安全</h2><p>因为 <code>atomic</code> 只能保证它自己这个变量的原子访问。<br> 它不能自动让“整个对象的复杂操作”都变成原子。</p>
+<p><code>vector</code> 的 <code>push_back</code> 背后可能涉及：</p>
+<ul>
+<li>读 size</li>
+<li>检查 capacity</li>
+<li>可能扩容</li>
+<li>搬迁元素</li>
+<li>更新尾指针</li>
+</ul>
+<p>这是一整套复合过程，不是一个机器指令或一个原子变量能包住的。</p>
+<p>所以你不能说“把 vector 变原子了就线程安全”，因为问题不是“一个字”能不能原子读写，而是整个容器内部状态更新必须整体同步。</p>
+<hr>
+<h2 id="八、什么是竞态条件（race-condition）"><a href="#八、什么是竞态条件（race-condition）" class="headerlink" title="八、什么是竞态条件（race condition）"></a>八、什么是竞态条件（race condition）</h2><p>竞态条件就是：</p>
+<p><strong>程序结果依赖于多个线程执行时序，而这个时序又没有被正确同步约束。</strong></p>
+<p>如果多个线程访问共享状态，最终结果取决于“谁先谁后、怎么交错”，那通常就有竞态风险。</p>
+<p>更严格一点，如果多个线程并发访问同一内存位置，且至少有一个是写，并且没有同步，那就是数据竞争，属于未定义行为。</p>
+<hr>
+<h2 id="九、C-内存模型里几个常见内存序的直观理解"><a href="#九、C-内存模型里几个常见内存序的直观理解" class="headerlink" title="九、C++ 内存模型里几个常见内存序的直观理解"></a>九、C++ 内存模型里几个常见内存序的直观理解</h2><h3 id="memory-order-relaxed"><a href="#memory-order-relaxed" class="headerlink" title="memory_order_relaxed"></a><code>memory_order_relaxed</code></h3><p>只保证这个原子操作本身是原子的。<br> 不额外保证跨线程顺序关系。适合纯计数、统计类场景。</p>
+<h3 id="memory-order-release"><a href="#memory-order-release" class="headerlink" title="memory_order_release"></a><code>memory_order_release</code></h3><p>用于“发布”一侧。<br> 它前面的普通写，不会被重排到它后面。<br> 常和 acquire 配对。</p>
+<h3 id="memory-order-acquire"><a href="#memory-order-acquire" class="headerlink" title="memory_order_acquire"></a><code>memory_order_acquire</code></h3><p>用于“获取”一侧。<br> 它后面的普通读写，不会被重排到它前面。<br> 看到 release 发布的那个原子值后，也能看到 release 之前写入的数据。</p>
+<h3 id="memory-order-seq-cst"><a href="#memory-order-seq-cst" class="headerlink" title="memory_order_seq_cst"></a><code>memory_order_seq_cst</code></h3><p>最强、最直观。<br> 可以近似理解成“大家都像在一个全局统一顺序里观察这些原子操作”，最容易理解，但通常约束也最强。</p>
+<hr>
+<h1 id="追问-1：两个线程同时跑结果可能不是-200000"><a href="#追问-1：两个线程同时跑结果可能不是-200000" class="headerlink" title="追问 1：两个线程同时跑结果可能不是 200000"></a>追问 1：两个线程同时跑结果可能不是 200000</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">int x = 0;</span><br><span class="line"></span><br><span class="line">void f() &#123;</span><br><span class="line">    for (int i = 0; i &lt; 100000; i++) &#123;</span><br><span class="line">        x++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>两个线程同时跑，结果不一定是 200000。<br> 原因是：</p>
+<p><strong><code>x++</code> 不是原子操作。</strong></p>
+<p>它至少包含：</p>
+<ol>
+<li>读出 <code>x</code></li>
+<li>加 1</li>
+<li>写回 <code>x</code></li>
+</ol>
+<p>两个线程可能这样交错：</p>
+<ul>
+<li>线程 A 读到 5</li>
+<li>线程 B 也读到 5</li>
+<li>A 写回 6</li>
+<li>B 也写回 6</li>
+</ul>
+<p>这样就丢失了一次更新。<br> 这就是典型的“丢失更新”问题。</p>
+<p>而且这里不只是结果不准，从标准角度讲这还是数据竞争，属于未定义行为。</p>
+<hr>
+<h1 id="追问-2：改成-std-atomic-x-0-是不是所有并发问题都解决了？"><a href="#追问-2：改成-std-atomic-x-0-是不是所有并发问题都解决了？" class="headerlink" title="追问 2：改成 std::atomic&lt;int&gt; x = 0; 是不是所有并发问题都解决了？"></a>追问 2：改成 <code>std::atomic&lt;int&gt; x = 0;</code> 是不是所有并发问题都解决了？</h1><p>不是。</p>
+<p>它只能保证：</p>
+<ul>
+<li><code>x</code> 这个变量自己的读写&#x2F;读改写是原子的</li>
+<li>比如 <code>x++</code> 不会丢更新</li>
+</ul>
+<p>但它不能自动保证：</p>
+<ul>
+<li>一组操作整体原子</li>
+<li>多个变量之间的一致性</li>
+<li>复杂容器内部状态线程安全</li>
+<li>“先检查再执行”的复合逻辑天然安全</li>
+</ul>
+<p>比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">if (x &gt; 0) &#123;</span><br><span class="line">    x--;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>即使 <code>x</code> 是原子，这整个“检查 + 修改”仍然不是一个整体原子事务。</p>
+<p>所以原子变量不能替代所有锁。</p>
+<hr>
+<h1 id="追问-3：为什么-condition-variable-必须搭配-unique-lock，而不是-lock-guard"><a href="#追问-3：为什么-condition-variable-必须搭配-unique-lock，而不是-lock-guard" class="headerlink" title="追问 3：为什么 condition_variable 必须搭配 unique_lock&lt;mutex&gt;，而不是 lock_guard&lt;mutex&gt;"></a>追问 3：为什么 <code>condition_variable</code> 必须搭配 <code>unique_lock&lt;mutex&gt;</code>，而不是 <code>lock_guard&lt;mutex&gt;</code></h1><p>因为 <code>wait</code> 的核心动作不是简单睡眠，它要做一个<strong>原子化组合操作</strong>：</p>
+<ol>
+<li>先释放互斥锁</li>
+<li>让线程进入等待</li>
+<li>被唤醒后重新加锁</li>
+<li>再返回</li>
+</ol>
+<p>而 <code>lock_guard</code> 太简单，它只有“构造加锁、析构解锁”，没有接口让 <code>wait</code> 在中间临时释放并重新获得这把锁。</p>
+<p><code>unique_lock</code> 则支持这种可控的 lock&#x2F;unlock 生命周期，所以 <code>condition_variable::wait</code> 需要的是 <code>unique_lock</code>。</p>
+<hr>
+<h1 id="追问-4：生产者消费者模型怎么写"><a href="#追问-4：生产者消费者模型怎么写" class="headerlink" title="追问 4：生产者消费者模型怎么写"></a>追问 4：生产者消费者模型怎么写</h1><p>核心同步关系是：</p>
+<ul>
+<li>队列为空，消费者等待</li>
+<li>队列满了，生产者等待</li>
+<li>判断条件必须放在 while 或谓词里，不是 if</li>
+</ul>
+<p>一个简化版思路如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">std::queue&lt;int&gt; q;</span><br><span class="line">std::mutex mtx;</span><br><span class="line">std::condition_variable not_empty, not_full;</span><br><span class="line">const size_t CAP = 100;</span><br><span class="line"></span><br><span class="line">void producer(int x) &#123;</span><br><span class="line">    std::unique_lock&lt;std::mutex&gt; lk(mtx);</span><br><span class="line">    not_full.wait(lk, [] &#123; return q.size() &lt; CAP; &#125;);</span><br><span class="line">    q.push(x);</span><br><span class="line">    lk.unlock();</span><br><span class="line">    not_empty.notify_one();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int consumer() &#123;</span><br><span class="line">    std::unique_lock&lt;std::mutex&gt; lk(mtx);</span><br><span class="line">    not_empty.wait(lk, [] &#123; return !q.empty(); &#125;);</span><br><span class="line">    int v = q.front();</span><br><span class="line">    q.pop();</span><br><span class="line">    lk.unlock();</span><br><span class="line">    not_full.notify_one();</span><br><span class="line">    return v;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为什么条件判断不能用 <code>if</code>？<br> 因为有虚假唤醒，也因为多个线程竞争时，醒来后条件可能已经又不成立了。<br> 所以必须重新检查。</p>
+<hr>
+<h1 id="追问-5：什么是死锁，常见成因有哪些？工程里怎么避免？"><a href="#追问-5：什么是死锁，常见成因有哪些？工程里怎么避免？" class="headerlink" title="追问 5：什么是死锁，常见成因有哪些？工程里怎么避免？"></a>追问 5：什么是死锁，常见成因有哪些？工程里怎么避免？</h1><p>死锁就是多个线程互相等待，谁都走不下去。</p>
+<p>常见成因：</p>
+<h3 id="1-多把锁获取顺序不一致"><a href="#1-多把锁获取顺序不一致" class="headerlink" title="1. 多把锁获取顺序不一致"></a>1. 多把锁获取顺序不一致</h3><p>线程 A 先拿锁 1 再等锁 2，线程 B 先拿锁 2 再等锁 1。</p>
+<h3 id="2-持锁等待"><a href="#2-持锁等待" class="headerlink" title="2. 持锁等待"></a>2. 持锁等待</h3><p>拿着一个锁不放，又去等待其他资源。</p>
+<h3 id="3-忘记释放"><a href="#3-忘记释放" class="headerlink" title="3. 忘记释放"></a>3. 忘记释放</h3><p>比如异常路径、早返回路径没正确解锁。</p>
+<h3 id="4-循环等待"><a href="#4-循环等待" class="headerlink" title="4. 循环等待"></a>4. 循环等待</h3><p>多个线程形成等待环。</p>
+<p>工程里避免死锁的常见手段：</p>
+<ul>
+<li>统一多把锁的获取顺序</li>
+<li>尽量缩小临界区</li>
+<li>用 RAII 锁避免忘记释放</li>
+<li>尽量避免持锁做耗时操作</li>
+<li>多锁场景可用 <code>std::lock</code></li>
+<li>设计上减少嵌套锁依赖</li>
+</ul>
+<hr>
+<h1 id="追问-6：shared-mutex-是干什么的，什么场景下更合适"><a href="#追问-6：shared-mutex-是干什么的，什么场景下更合适" class="headerlink" title="追问 6：shared_mutex 是干什么的，什么场景下更合适"></a>追问 6：<code>shared_mutex</code> 是干什么的，什么场景下更合适</h1><p><code>shared_mutex</code> 是读写锁。</p>
+<p>它支持两种加锁方式：</p>
+<ul>
+<li>共享锁：多个读线程可以同时持有</li>
+<li>独占锁：写线程独占</li>
+</ul>
+<p>适合：</p>
+<p><strong>读多写少</strong> 的场景。</p>
+<p>比如配置中心、本地缓存、字典查询表。<br> 如果大多数线程只是读，少量线程偶尔更新，用普通 <code>mutex</code> 会让所有读线程彼此阻塞；而 <code>shared_mutex</code> 可以让读读并发。</p>
+<hr>
+<h1 id="追问-7：下面代码为什么不安全"><a href="#追问-7：下面代码为什么不安全" class="headerlink" title="追问 7：下面代码为什么不安全"></a>追问 7：下面代码为什么不安全</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">bool ready = false;</span><br><span class="line">int data = 0;</span><br><span class="line"></span><br><span class="line">void producer() &#123;</span><br><span class="line">    data = 42;</span><br><span class="line">    ready = true;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void consumer() &#123;</span><br><span class="line">    while (!ready) &#123;&#125;</span><br><span class="line">    cout &lt;&lt; data &lt;&lt; endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>问题在于这在多线程下没有任何同步，是典型的数据竞争和可见性问题。</p>
+<h3 id="1-数据竞争"><a href="#1-数据竞争" class="headerlink" title="1. 数据竞争"></a>1. 数据竞争</h3><p>一个线程写 <code>ready/data</code>，另一个线程读，没有同步。</p>
+<h3 id="2-编译器-CPU-重排"><a href="#2-编译器-CPU-重排" class="headerlink" title="2. 编译器&#x2F;CPU 重排"></a>2. 编译器&#x2F;CPU 重排</h3><p>即使你代码写的是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">data = 42;</span><br><span class="line">ready = true;</span><br></pre></td></tr></table></figure>
+
+<p>也不能保证另一个线程观察到的顺序就是这样。<br> 可能看到 <code>ready == true</code> 时，<code>data</code> 还没对它可见。</p>
+<h3 id="3-可见性问题"><a href="#3-可见性问题" class="headerlink" title="3. 可见性问题"></a>3. 可见性问题</h3><p>消费者线程一直在本地缓存&#x2F;寄存器视角下看旧值，不一定及时看到生产者写入。</p>
+<p>所以这个例子要正确，需要用原子变量或锁&#x2F;条件变量建立同步关系，也就是建立 happens-before。</p>
+<hr>
+<h1 id="追问-8：什么叫-happens-before"><a href="#追问-8：什么叫-happens-before" class="headerlink" title="追问 8：什么叫 happens-before"></a>追问 8：什么叫 happens-before</h1><p>不用背标准定义，我会这样解释：</p>
+<p><strong>happens-before 是一种“先发生且结果对另一个线程可见”的同步保证。</strong></p>
+<p>也就是说，不只是代码顺序上的“我先写了”，而是语言和同步原语真正保证：</p>
+<ul>
+<li>一个线程的写</li>
+<li>在另一个线程的读之前</li>
+<li>并且这个读一定能看到那个写，或者至少看到它之后的结果</li>
+</ul>
+<p>这个保证怎么建立？</p>
+<p>典型方式有：</p>
+<ul>
+<li>同一 mutex 的 unlock 和后续 lock</li>
+<li>原子的 release &#x2F; acquire 配对</li>
+<li>线程 <code>join</code></li>
+<li>条件变量等待与通知配合互斥锁</li>
+</ul>
+<p>没有 happens-before，就不能说“另一个线程一定看得到我的写”。</p>
+<hr>
+<h2 id="小追问-1：join-和-detach-的区别，什么时候-detach-危险"><a href="#小追问-1：join-和-detach-的区别，什么时候-detach-危险" class="headerlink" title="小追问 1：join() 和 detach() 的区别，什么时候 detach 危险"></a>小追问 1：<code>join()</code> 和 <code>detach()</code> 的区别，什么时候 <code>detach</code> 危险</h2><h3 id="join"><a href="#join" class="headerlink" title="join()"></a><code>join()</code></h3><p>当前线程等待目标线程结束。<br> 线程执行完成后，资源被正确回收，生命周期关系清晰。</p>
+<h3 id="detach"><a href="#detach" class="headerlink" title="detach()"></a><code>detach()</code></h3><p>线程和 <code>std::thread</code> 对象分离，后台独立运行，之后你没法再 <code>join</code> 它。</p>
+<p><code>detach</code> 危险的地方在于：</p>
+<ul>
+<li>线程可能访问已经销毁的对象</li>
+<li>主线程退出时后台线程还在跑</li>
+<li>生命周期难管理</li>
+<li>错误传播和收尾都很麻烦</li>
+</ul>
+<p>所以工程里通常优先 <code>join</code>，除非你非常明确这个后台线程的生命周期和资源依赖。</p>
+<hr>
+<h2 id="小追问-2：自旋锁和互斥锁的区别，各自适合什么场景"><a href="#小追问-2：自旋锁和互斥锁的区别，各自适合什么场景" class="headerlink" title="小追问 2：自旋锁和互斥锁的区别，各自适合什么场景"></a>小追问 2：自旋锁和互斥锁的区别，各自适合什么场景</h2><h3 id="自旋锁"><a href="#自旋锁" class="headerlink" title="自旋锁"></a>自旋锁</h3><p>拿不到锁时不睡眠，一直忙等。</p>
+<p>适合：</p>
+<ul>
+<li>临界区特别短</li>
+<li>锁持有时间很短</li>
+<li>线程切换成本比等一会儿更贵</li>
+<li>内核态&#x2F;低延迟场景</li>
+</ul>
+<p>缺点是会持续占 CPU。</p>
+<h3 id="互斥锁"><a href="#互斥锁" class="headerlink" title="互斥锁"></a>互斥锁</h3><p>拿不到锁时通常会阻塞&#x2F;睡眠，由系统调度。</p>
+<p>适合：</p>
+<ul>
+<li>临界区可能较长</li>
+<li>竞争不小</li>
+<li>不想空转耗 CPU</li>
+</ul>
+<p>所以一句话：</p>
+<p><strong>短临界区、高频、低延迟可考虑自旋；一般业务线程同步更多用互斥锁。</strong></p>
+<hr>
+<h2 id="小追问-3：为什么“原子变量无锁”不代表“没有-CPU-成本”"><a href="#小追问-3：为什么“原子变量无锁”不代表“没有-CPU-成本”" class="headerlink" title="小追问 3：为什么“原子变量无锁”不代表“没有 CPU 成本”"></a>小追问 3：为什么“原子变量无锁”不代表“没有 CPU 成本”</h2><p>因为“无锁”只是说它不一定通过操作系统 mutex 那种阻塞锁来实现，<br> 不代表它没有同步代价。</p>
+<p>原子操作仍然可能涉及：</p>
+<ul>
+<li>CPU 原子指令</li>
+<li>cache line 独占和一致性流量</li>
+<li>内存屏障</li>
+<li>流水线和乱序执行限制</li>
+<li>多核之间 cache 抖动</li>
+</ul>
+<p>尤其是高竞争下，一个原子热点变量会让多个核心频繁争抢 cache line，成本可能很高。</p>
+<p>所以“lock-free”不等于“free”。</p>
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><code>std::thread</code> 是线程对象封装，线程创建后必须在析构前 <code>join</code> 或 <code>detach</code>，否则会 <code>std::terminate</code>。<code>mutex</code> 用来保护临界区，避免多个线程同时修改共享数据；<code>lock_guard</code> 轻量简单，<code>unique_lock</code> 更灵活，尤其适合和 <code>condition_variable</code> 配合。条件变量用于线程间等待和通知，典型写法是 <code>cv.wait(lock, predicate)</code>，因为要防止虚假唤醒并确保条件被重新检查。<code>atomic</code> 适合单个变量的原子读写和读改写，比如计数器、标志位，但不能替代所有锁，因为它无法自动保证复合操作和复杂对象的一致性。竞态条件本质上是结果依赖未同步的线程执行时序；像 <code>x++</code> 这种操作不是原子动作，多个线程并发会丢失更新。C++ 内存模型里，<code>relaxed</code> 只保证原子性，<code>release/acquire</code> 用来建立跨线程可见性，<code>seq_cst</code> 则提供最强、最直观的全序语义。真正让一个线程的写对另一个线程“保证可见”的关键，是建立 happens-before 关系，这通常要靠锁、条件变量、原子同步或线程 join 等同步原语。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/categories/">分类</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#thread%E3%80%81mutex%E3%80%81condition-variable%E3%80%81atomic%E3%80%81C-%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.</span> <span class="toc-text">thread、mutex、condition_variable、atomic、C++ 内存模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81std-thread-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E5%A6%82%E6%9E%9C%E6%97%A2%E4%B8%8D-join-%E4%B9%9F%E4%B8%8D-detach-%E4%BC%9A%E6%80%8E%E6%A0%B7"><span class="toc-number">1.1.</span> <span class="toc-text">一、std::thread 是什么，如果既不 join 也不 detach 会怎样</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81mutex-%E7%9A%84%E4%BD%9C%E7%94%A8%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%8A%A0%E9%94%81"><span class="toc-number">1.2.</span> <span class="toc-text">二、mutex 的作用是什么，为什么要加锁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81lock-guard-%E5%92%8C-unique-lock-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">1.3.</span> <span class="toc-text">三、lock_guard 和 unique_lock 的区别</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#lock-guard"><span class="toc-number">1.3.1.</span> <span class="toc-text">lock_guard</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#unique-lock"><span class="toc-number">1.3.2.</span> <span class="toc-text">unique_lock</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81condition-variable-%E6%98%AF%E5%B9%B2%E4%BB%80%E4%B9%88%E7%9A%84%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%9A%E5%B8%B8%E8%A6%81%E9%85%8D%E5%90%88%E4%BA%92%E6%96%A5%E9%94%81"><span class="toc-number">1.4.</span> <span class="toc-text">四、condition_variable 是干什么的，为什么通常要配合互斥锁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88-wait-%E8%A6%81%E5%86%99%E6%88%90-cv-wait-lock-return-%E6%9D%A1%E4%BB%B6%E6%88%90%E7%AB%8B"><span class="toc-number">1.5.</span> <span class="toc-text">五、为什么 wait 要写成 cv.wait(lock, [] { return 条件成立; });</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E9%98%B2%E6%AD%A2%E8%99%9A%E5%81%87%E5%94%A4%E9%86%92"><span class="toc-number">1.5.1.</span> <span class="toc-text">1. 防止虚假唤醒</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E9%98%B2%E6%AD%A2%E8%A2%AB%E5%94%A4%E9%86%92%E6%97%B6%E6%9D%A1%E4%BB%B6%E5%8F%88%E8%A2%AB%E5%88%AB%E7%9A%84%E7%BA%BF%E7%A8%8B%E6%8A%A2%E5%85%88%E6%94%B9%E6%8E%89"><span class="toc-number">1.5.2.</span> <span class="toc-text">2. 防止被唤醒时条件又被别的线程抢先改掉</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81atomic-%E5%92%8C-mutex-%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%8C%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8%E5%93%AA%E4%B8%AA"><span class="toc-number">1.6.</span> <span class="toc-text">六、atomic 和 mutex 的区别，什么时候用哪个</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#atomic"><span class="toc-number">1.6.1.</span> <span class="toc-text">atomic</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mutex"><span class="toc-number">1.6.2.</span> <span class="toc-text">mutex</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88-atomic-cnt-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%EF%BC%8C%E4%BD%86-vector-%E4%B8%8D%E6%98%AF%E6%94%B9%E6%88%90%E5%8E%9F%E5%AD%90%E5%B0%B1%E8%83%BD%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8"><span class="toc-number">1.7.</span> <span class="toc-text">七、为什么 atomic&lt;int&gt; cnt++ 线程安全，但 vector 不是改成原子就能线程安全</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%EF%BC%88race-condition%EF%BC%89"><span class="toc-number">1.8.</span> <span class="toc-text">八、什么是竞态条件（race condition）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81C-%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E9%87%8C%E5%87%A0%E4%B8%AA%E5%B8%B8%E8%A7%81%E5%86%85%E5%AD%98%E5%BA%8F%E7%9A%84%E7%9B%B4%E8%A7%82%E7%90%86%E8%A7%A3"><span class="toc-number">1.9.</span> <span class="toc-text">九、C++ 内存模型里几个常见内存序的直观理解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#memory-order-relaxed"><span class="toc-number">1.9.1.</span> <span class="toc-text">memory_order_relaxed</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#memory-order-release"><span class="toc-number">1.9.2.</span> <span class="toc-text">memory_order_release</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#memory-order-acquire"><span class="toc-number">1.9.3.</span> <span class="toc-text">memory_order_acquire</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#memory-order-seq-cst"><span class="toc-number">1.9.4.</span> <span class="toc-text">memory_order_seq_cst</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-1%EF%BC%9A%E4%B8%A4%E4%B8%AA%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%97%B6%E8%B7%91%E7%BB%93%E6%9E%9C%E5%8F%AF%E8%83%BD%E4%B8%8D%E6%98%AF-200000"><span class="toc-number">2.</span> <span class="toc-text">追问 1：两个线程同时跑结果可能不是 200000</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-2%EF%BC%9A%E6%94%B9%E6%88%90-std-atomic-x-0-%E6%98%AF%E4%B8%8D%E6%98%AF%E6%89%80%E6%9C%89%E5%B9%B6%E5%8F%91%E9%97%AE%E9%A2%98%E9%83%BD%E8%A7%A3%E5%86%B3%E4%BA%86%EF%BC%9F"><span class="toc-number">3.</span> <span class="toc-text">追问 2：改成 std::atomic&lt;int&gt; x &#x3D; 0; 是不是所有并发问题都解决了？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-3%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88-condition-variable-%E5%BF%85%E9%A1%BB%E6%90%AD%E9%85%8D-unique-lock%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF-lock-guard"><span class="toc-number">4.</span> <span class="toc-text">追问 3：为什么 condition_variable 必须搭配 unique_lock&lt;mutex&gt;，而不是 lock_guard&lt;mutex&gt;</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-4%EF%BC%9A%E7%94%9F%E4%BA%A7%E8%80%85%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%9E%8B%E6%80%8E%E4%B9%88%E5%86%99"><span class="toc-number">5.</span> <span class="toc-text">追问 4：生产者消费者模型怎么写</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-5%EF%BC%9A%E4%BB%80%E4%B9%88%E6%98%AF%E6%AD%BB%E9%94%81%EF%BC%8C%E5%B8%B8%E8%A7%81%E6%88%90%E5%9B%A0%E6%9C%89%E5%93%AA%E4%BA%9B%EF%BC%9F%E5%B7%A5%E7%A8%8B%E9%87%8C%E6%80%8E%E4%B9%88%E9%81%BF%E5%85%8D%EF%BC%9F"><span class="toc-number">6.</span> <span class="toc-text">追问 5：什么是死锁，常见成因有哪些？工程里怎么避免？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%A4%9A%E6%8A%8A%E9%94%81%E8%8E%B7%E5%8F%96%E9%A1%BA%E5%BA%8F%E4%B8%8D%E4%B8%80%E8%87%B4"><span class="toc-number">6.1.</span> <span class="toc-text">1. 多把锁获取顺序不一致</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%8C%81%E9%94%81%E7%AD%89%E5%BE%85"><span class="toc-number">6.2.</span> <span class="toc-text">2. 持锁等待</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%BF%98%E8%AE%B0%E9%87%8A%E6%94%BE"><span class="toc-number">6.3.</span> <span class="toc-text">3. 忘记释放</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%BE%AA%E7%8E%AF%E7%AD%89%E5%BE%85"><span class="toc-number">6.4.</span> <span class="toc-text">4. 循环等待</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-6%EF%BC%9Ashared-mutex-%E6%98%AF%E5%B9%B2%E4%BB%80%E4%B9%88%E7%9A%84%EF%BC%8C%E4%BB%80%E4%B9%88%E5%9C%BA%E6%99%AF%E4%B8%8B%E6%9B%B4%E5%90%88%E9%80%82"><span class="toc-number">7.</span> <span class="toc-text">追问 6：shared_mutex 是干什么的，什么场景下更合适</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-7%EF%BC%9A%E4%B8%8B%E9%9D%A2%E4%BB%A3%E7%A0%81%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E5%AE%89%E5%85%A8"><span class="toc-number">8.</span> <span class="toc-text">追问 7：下面代码为什么不安全</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%95%B0%E6%8D%AE%E7%AB%9E%E4%BA%89"><span class="toc-number">8.1.</span> <span class="toc-text">1. 数据竞争</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BC%96%E8%AF%91%E5%99%A8-CPU-%E9%87%8D%E6%8E%92"><span class="toc-number">8.2.</span> <span class="toc-text">2. 编译器&#x2F;CPU 重排</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%8F%AF%E8%A7%81%E6%80%A7%E9%97%AE%E9%A2%98"><span class="toc-number">8.3.</span> <span class="toc-text">3. 可见性问题</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%BD%E9%97%AE-8%EF%BC%9A%E4%BB%80%E4%B9%88%E5%8F%AB-happens-before"><span class="toc-number">9.</span> <span class="toc-text">追问 8：什么叫 happens-before</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E8%BF%BD%E9%97%AE-1%EF%BC%9Ajoin-%E5%92%8C-detach-%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%8C%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99-detach-%E5%8D%B1%E9%99%A9"><span class="toc-number">9.1.</span> <span class="toc-text">小追问 1：join() 和 detach() 的区别，什么时候 detach 危险</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#join"><span class="toc-number">9.1.1.</span> <span class="toc-text">join()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#detach"><span class="toc-number">9.1.2.</span> <span class="toc-text">detach()</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E8%BF%BD%E9%97%AE-2%EF%BC%9A%E8%87%AA%E6%97%8B%E9%94%81%E5%92%8C%E4%BA%92%E6%96%A5%E9%94%81%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%8C%E5%90%84%E8%87%AA%E9%80%82%E5%90%88%E4%BB%80%E4%B9%88%E5%9C%BA%E6%99%AF"><span class="toc-number">9.2.</span> <span class="toc-text">小追问 2：自旋锁和互斥锁的区别，各自适合什么场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E6%97%8B%E9%94%81"><span class="toc-number">9.2.1.</span> <span class="toc-text">自旋锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%92%E6%96%A5%E9%94%81"><span class="toc-number">9.2.2.</span> <span class="toc-text">互斥锁</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E8%BF%BD%E9%97%AE-3%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E2%80%9C%E5%8E%9F%E5%AD%90%E5%8F%98%E9%87%8F%E6%97%A0%E9%94%81%E2%80%9D%E4%B8%8D%E4%BB%A3%E8%A1%A8%E2%80%9C%E6%B2%A1%E6%9C%89-CPU-%E6%88%90%E6%9C%AC%E2%80%9D"><span class="toc-number">9.3.</span> <span class="toc-text">小追问 3：为什么“原子变量无锁”不代表“没有 CPU 成本”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">9.4.</span> <span class="toc-text">总结</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&text=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&title=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&is_video=false&description=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=thread、mutex、condition_variable、atomic、C++ 内存模型&body=Check out this article: http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&title=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&title=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&title=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&title=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&name=thread、mutex、condition_variable、atomic、C++ 内存模型&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/04/07/c++/thread%E3%80%81mutex%E3%80%81condition_variable%E3%80%81atomic%E3%80%81C++%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/&t=thread、mutex、condition_variable、atomic、C++ 内存模型"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2025-2026
+    LightningJie
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
