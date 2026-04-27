@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="排序算法总结（C++版）这篇文章把面试里最常考的排序算法做一个系统整理。目标不是只会背结论，而是能在面试里把：  核心思想 时间复杂度 空间复杂度 稳定性 适用场景 手写模板 高频追问  说清楚。  一、总览   排序算法 平均时间复杂度 最坏时间复杂度 空间复杂度 稳定性 特点    冒泡排序 O(n^2) O(n^2) O(1) 稳定 简单，适合入门   选择排序 O(n^2) O(n^2)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="排序算法总结">
+<meta property="og:url" content="http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:site_name" content="LightningJie 的博客">
+<meta property="og:description" content="排序算法总结（C++版）这篇文章把面试里最常考的排序算法做一个系统整理。目标不是只会背结论，而是能在面试里把：  核心思想 时间复杂度 空间复杂度 稳定性 适用场景 手写模板 高频追问  说清楚。  一、总览   排序算法 平均时间复杂度 最坏时间复杂度 空间复杂度 稳定性 特点    冒泡排序 O(n^2) O(n^2) O(1) 稳定 简单，适合入门   选择排序 O(n^2) O(n^2)">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-04-19T03:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-27T01:46:11.483Z">
+<meta property="article:author" content="LightningJie">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>排序算法总结</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="LightningJie 的博客" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2026/04/19/c++/%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/04/19/c++/%E5%AD%90%E6%95%B0%E7%BB%84%E4%B8%8E%E5%AD%90%E5%BA%8F%E5%88%97/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&text=排序算法总结"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&title=排序算法总结"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&is_video=false&description=排序算法总结"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=排序算法总结&body=Check out this article: http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&title=排序算法总结"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&title=排序算法总结"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&title=排序算法总结"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&title=排序算法总结"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&name=排序算法总结&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&t=排序算法总结"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93%EF%BC%88C-%E7%89%88%EF%BC%89"><span class="toc-number">1.</span> <span class="toc-text">排序算法总结（C++版）</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%80%BB%E8%A7%88"><span class="toc-number">2.</span> <span class="toc-text">一、总览</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F"><span class="toc-number">3.</span> <span class="toc-text">二、冒泡排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3"><span class="toc-number">3.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BE%8B%E5%AD%90"><span class="toc-number">3.2.</span> <span class="toc-text">2. 例子</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%BB%A3%E7%A0%81"><span class="toc-number">3.3.</span> <span class="toc-text">3. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%89%B9%E7%82%B9"><span class="toc-number">3.4.</span> <span class="toc-text">4. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE"><span class="toc-number">3.5.</span> <span class="toc-text">5. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E7%A8%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">3.5.1.</span> <span class="toc-text">为什么稳定？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%80%89%E6%8B%A9%E6%8E%92%E5%BA%8F"><span class="toc-number">4.</span> <span class="toc-text">三、选择排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-1"><span class="toc-number">4.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%A3%E7%A0%81"><span class="toc-number">4.2.</span> <span class="toc-text">2. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9"><span class="toc-number">4.3.</span> <span class="toc-text">3. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E7%A8%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">4.4.</span> <span class="toc-text">4. 为什么不稳定？</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%8F%92%E5%85%A5%E6%8E%92%E5%BA%8F"><span class="toc-number">5.</span> <span class="toc-text">四、插入排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-2"><span class="toc-number">5.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BE%8B%E5%AD%90-1"><span class="toc-number">5.2.</span> <span class="toc-text">2. 例子</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%BB%A3%E7%A0%81-1"><span class="toc-number">5.3.</span> <span class="toc-text">3. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%89%B9%E7%82%B9-1"><span class="toc-number">5.4.</span> <span class="toc-text">4. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE-1"><span class="toc-number">5.5.</span> <span class="toc-text">5. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BE%88%E5%A4%9A%E5%BA%93%E6%8E%92%E5%BA%8F%E5%9C%A8%E5%B0%8F%E5%8C%BA%E9%97%B4%E4%BC%9A%E9%80%80%E5%8C%96%E6%88%90%E6%8F%92%E5%85%A5%E6%8E%92%E5%BA%8F%EF%BC%9F"><span class="toc-number">5.5.1.</span> <span class="toc-text">为什么很多库排序在小区间会退化成插入排序？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%B8%8C%E5%B0%94%E6%8E%92%E5%BA%8F"><span class="toc-number">6.</span> <span class="toc-text">五、希尔排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-3"><span class="toc-number">6.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%A3%E7%A0%81-1"><span class="toc-number">6.2.</span> <span class="toc-text">2. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9-1"><span class="toc-number">6.3.</span> <span class="toc-text">3. 特点</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F"><span class="toc-number">7.</span> <span class="toc-text">六、归并排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-4"><span class="toc-number">7.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%A3%E7%A0%81-2"><span class="toc-number">7.2.</span> <span class="toc-text">2. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9-2"><span class="toc-number">7.3.</span> <span class="toc-text">3. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE"><span class="toc-number">7.4.</span> <span class="toc-text">4. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F%E6%98%AF%E7%A8%B3%E5%AE%9A%E7%9A%84%EF%BC%9F"><span class="toc-number">7.4.1.</span> <span class="toc-text">为什么归并排序是稳定的？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%82%E5%90%88%E9%93%BE%E8%A1%A8%E6%8E%92%E5%BA%8F%EF%BC%9F"><span class="toc-number">7.4.2.</span> <span class="toc-text">为什么适合链表排序？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F"><span class="toc-number">8.</span> <span class="toc-text">七、快速排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-5"><span class="toc-number">8.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%BB%8F%E5%85%B8%E6%A8%A1%E6%9D%BF"><span class="toc-number">8.2.</span> <span class="toc-text">2. 经典模板</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9-3"><span class="toc-number">8.3.</span> <span class="toc-text">3. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE-1"><span class="toc-number">8.4.</span> <span class="toc-text">4. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%85%88%E8%B5%B0%E5%8F%B3%E8%BE%B9%E5%86%8D%E8%B5%B0%E5%B7%A6%E8%BE%B9%EF%BC%9F"><span class="toc-number">8.4.1.</span> <span class="toc-text">为什么先走右边再走左边？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E9%9A%8F%E6%9C%BA-pivot%EF%BC%9F"><span class="toc-number">8.4.2.</span> <span class="toc-text">为什么要随机 pivot？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BF%AB%E6%8E%92%E4%B8%BA%E4%BB%80%E4%B9%88%E5%B9%B3%E5%9D%87%E6%98%AF-O-n-log-n-%EF%BC%9F"><span class="toc-number">8.4.3.</span> <span class="toc-text">快排为什么平均是 O(n log n)？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E5%BF%AB%E9%80%9F%E9%80%89%E6%8B%A9%EF%BC%88Quick-Select%EF%BC%89"><span class="toc-number">9.</span> <span class="toc-text">八、快速选择（Quick Select）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%80%82%E7%94%A8%E9%A2%98%E5%9E%8B"><span class="toc-number">9.1.</span> <span class="toc-text">1. 适用题型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%80%9D%E6%83%B3"><span class="toc-number">9.2.</span> <span class="toc-text">2. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="toc-number">9.3.</span> <span class="toc-text">3. 复杂度</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%85%B8%E5%9E%8B%E9%A2%98"><span class="toc-number">9.4.</span> <span class="toc-text">4. 典型题</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%A0%86%E6%8E%92%E5%BA%8F"><span class="toc-number">10.</span> <span class="toc-text">九、堆排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-6"><span class="toc-number">10.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%A3%E7%A0%81-3"><span class="toc-number">10.2.</span> <span class="toc-text">2. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9-4"><span class="toc-number">10.3.</span> <span class="toc-text">3. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE-2"><span class="toc-number">10.4.</span> <span class="toc-text">4. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BB%BA%E5%A0%86%E4%BB%8E-n-2-1-%E5%BC%80%E5%A7%8B%EF%BC%9F"><span class="toc-number">10.4.1.</span> <span class="toc-text">为什么建堆从 n&#x2F;2 - 1 开始？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%A0%86%E6%8E%92%E5%BA%8F%E4%B8%8D%E7%A8%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">10.4.2.</span> <span class="toc-text">为什么堆排序不稳定？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E7%BB%84%E4%B8%AD%E5%A6%82%E4%BD%95%E8%A1%A8%E7%A4%BA%E5%A0%86%EF%BC%9F"><span class="toc-number">10.4.3.</span> <span class="toc-text">数组中如何表示堆？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E8%AE%A1%E6%95%B0%E6%8E%92%E5%BA%8F"><span class="toc-number">11.</span> <span class="toc-text">十、计数排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-7"><span class="toc-number">11.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%A3%E7%A0%81-4"><span class="toc-number">11.2.</span> <span class="toc-text">2. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9-5"><span class="toc-number">11.3.</span> <span class="toc-text">3. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE-3"><span class="toc-number">11.4.</span> <span class="toc-text">4. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%A1%E6%95%B0%E6%8E%92%E5%BA%8F%E4%B8%8D%E9%80%82%E5%90%88%E6%95%B0%E6%8D%AE%E8%8C%83%E5%9B%B4%E7%89%B9%E5%88%AB%E5%A4%A7%EF%BC%9F"><span class="toc-number">11.4.1.</span> <span class="toc-text">为什么计数排序不适合数据范围特别大？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%B8%80%E3%80%81%E6%A1%B6%E6%8E%92%E5%BA%8F"><span class="toc-number">12.</span> <span class="toc-text">十一、桶排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-8"><span class="toc-number">12.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%89%B9%E7%82%B9"><span class="toc-number">12.2.</span> <span class="toc-text">2. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE"><span class="toc-number">12.3.</span> <span class="toc-text">3. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A1%B6%E6%8E%92%E5%BA%8F%E5%92%8C%E8%AE%A1%E6%95%B0%E6%8E%92%E5%BA%8F%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="toc-number">12.3.1.</span> <span class="toc-text">桶排序和计数排序区别？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%BA%8C%E3%80%81%E5%9F%BA%E6%95%B0%E6%8E%92%E5%BA%8F"><span class="toc-number">13.</span> <span class="toc-text">十二、基数排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-9"><span class="toc-number">13.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%89%B9%E7%82%B9-1"><span class="toc-number">13.2.</span> <span class="toc-text">2. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE-1"><span class="toc-number">13.3.</span> <span class="toc-text">3. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9F%BA%E6%95%B0%E6%8E%92%E5%BA%8F%E8%A6%81%E6%B1%82%E5%AD%90%E6%8E%92%E5%BA%8F%E7%A8%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">13.3.1.</span> <span class="toc-text">为什么基数排序要求子排序稳定？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%B8%89%E3%80%81%E7%A8%B3%E5%AE%9A%E6%8E%92%E5%BA%8F%E4%B8%8E%E4%B8%8D%E7%A8%B3%E5%AE%9A%E6%8E%92%E5%BA%8F"><span class="toc-number">14.</span> <span class="toc-text">十三、稳定排序与不稳定排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%BB%80%E4%B9%88%E5%8F%AB%E7%A8%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">14.1.</span> <span class="toc-text">1. 什么叫稳定？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%B8%B8%E8%A7%81%E7%A8%B3%E5%AE%9A%E6%8E%92%E5%BA%8F"><span class="toc-number">14.2.</span> <span class="toc-text">2. 常见稳定排序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%B8%B8%E8%A7%81%E4%B8%8D%E7%A8%B3%E5%AE%9A%E6%8E%92%E5%BA%8F"><span class="toc-number">14.3.</span> <span class="toc-text">3. 常见不稳定排序</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E5%9B%9B%E3%80%81%E9%9D%A2%E8%AF%95%E6%9C%80%E5%B8%B8%E8%80%83%E7%9A%84%E5%87%A0%E4%B8%AA%E5%AF%B9%E6%AF%94"><span class="toc-number">15.</span> <span class="toc-text">十四、面试最常考的几个对比</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%BF%AB%E6%8E%92-vs-%E5%BD%92%E5%B9%B6"><span class="toc-number">15.1.</span> <span class="toc-text">1. 快排 vs 归并</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BF%AB%E6%8E%92"><span class="toc-number">15.1.1.</span> <span class="toc-text">快排</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BD%92%E5%B9%B6"><span class="toc-number">15.1.2.</span> <span class="toc-text">归并</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%BF%AB%E6%8E%92-vs-%E5%A0%86%E6%8E%92"><span class="toc-number">15.2.</span> <span class="toc-text">2. 快排 vs 堆排</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BF%AB%E6%8E%92-1"><span class="toc-number">15.2.1.</span> <span class="toc-text">快排</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A0%86%E6%8E%92"><span class="toc-number">15.2.2.</span> <span class="toc-text">堆排</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%8F%92%E5%85%A5%E6%8E%92%E5%BA%8F-vs-%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F"><span class="toc-number">15.3.</span> <span class="toc-text">3. 插入排序 vs 冒泡排序</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%BA%94%E3%80%81%E9%9D%A2%E8%AF%95%E4%B8%AD%E6%8E%92%E5%BA%8F%E9%A2%98%E6%80%8E%E4%B9%88%E9%80%89"><span class="toc-number">16.</span> <span class="toc-text">十五、面试中排序题怎么选</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%A6%82%E6%9E%9C%E9%A2%98%E7%9B%AE%E5%B0%B1%E6%98%AF%E2%80%9C%E6%8E%92%E5%BA%8F%E6%95%B0%E7%BB%84%E2%80%9D"><span class="toc-number">16.1.</span> <span class="toc-text">1. 如果题目就是“排序数组”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%A6%82%E6%9E%9C%E6%98%AF%E9%93%BE%E8%A1%A8%E6%8E%92%E5%BA%8F"><span class="toc-number">16.2.</span> <span class="toc-text">2. 如果是链表排序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%A6%82%E6%9E%9C%E6%98%AF%E6%89%BE%E7%AC%AC-K-%E5%A4%A7-%E7%AC%AC-K-%E5%B0%8F"><span class="toc-number">16.3.</span> <span class="toc-text">3. 如果是找第 K 大&#x2F;第 K 小</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%A6%82%E6%9E%9C%E6%95%B0%E6%8D%AE%E8%8C%83%E5%9B%B4%E7%89%B9%E5%88%AB%E5%B0%8F%EF%BC%8C%E8%80%8C%E4%B8%94%E6%98%AF%E6%95%B4%E6%95%B0"><span class="toc-number">16.4.</span> <span class="toc-text">4. 如果数据范围特别小，而且是整数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%A6%82%E6%9E%9C%E6%95%B0%E7%BB%84%E5%BE%88%E5%B0%8F%E6%88%96%E6%8E%A5%E8%BF%91%E6%9C%89%E5%BA%8F"><span class="toc-number">16.5.</span> <span class="toc-text">5. 如果数组很小或接近有序</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E5%85%AD%E3%80%81%E9%9D%A2%E8%AF%95%E4%B8%AD%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E6%95%B4%E7%90%86"><span class="toc-number">17.</span> <span class="toc-text">十六、面试中常见问题整理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%93%AA%E4%BA%9B%E6%8E%92%E5%BA%8F%E6%98%AF-O-n-log-n-%EF%BC%9F"><span class="toc-number">17.1.</span> <span class="toc-text">1. 哪些排序是 O(n log n)？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%93%AA%E4%BA%9B%E6%8E%92%E5%BA%8F%E6%98%AF%E7%A8%B3%E5%AE%9A%E7%9A%84%EF%BC%9F"><span class="toc-number">17.2.</span> <span class="toc-text">2. 哪些排序是稳定的？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%93%AA%E4%BA%9B%E6%8E%92%E5%BA%8F%E6%98%AF%E5%8E%9F%E5%9C%B0%E6%8E%92%E5%BA%8F%EF%BC%9F"><span class="toc-number">17.3.</span> <span class="toc-text">3. 哪些排序是原地排序？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BF%AB%E6%8E%92%E5%B9%B3%E5%9D%87%E5%BF%AB%EF%BC%9F"><span class="toc-number">17.4.</span> <span class="toc-text">4. 为什么快排平均快？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BD%92%E5%B9%B6%E9%80%82%E5%90%88%E5%A4%96%E9%83%A8%E6%8E%92%E5%BA%8F%EF%BC%9F"><span class="toc-number">17.5.</span> <span class="toc-text">5. 为什么归并适合外部排序？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E5%A0%86%E6%8E%92%E5%BA%8F%E4%B8%BA%E4%BB%80%E4%B9%88%E7%A9%BA%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6-O-1-%EF%BC%9F"><span class="toc-number">17.6.</span> <span class="toc-text">6. 堆排序为什么空间复杂度 O(1)？</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%B8%83%E3%80%81%E6%9C%80%E5%BB%BA%E8%AE%AE%E8%83%8C%E7%9A%84%E4%B8%89%E4%B8%AA%E6%A8%A1%E6%9D%BF"><span class="toc-number">18.</span> <span class="toc-text">十七、最建议背的三个模板</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%BF%AB%E6%8E%92"><span class="toc-number">18.1.</span> <span class="toc-text">1. 快排</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%BD%92%E5%B9%B6"><span class="toc-number">18.2.</span> <span class="toc-text">2. 归并</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%A0%86%E6%8E%92"><span class="toc-number">18.3.</span> <span class="toc-text">3. 堆排</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E5%85%AB%E3%80%81%E6%9C%80%E5%90%8E%E6%80%BB%E7%BB%93"><span class="toc-number">19.</span> <span class="toc-text">十八、最后总结</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">19.1.</span> <span class="toc-text">第一优先级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">19.2.</span> <span class="toc-text">第二优先级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">19.3.</span> <span class="toc-text">第三优先级</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%B9%9D%E3%80%81%E9%99%84%EF%BC%9A%E4%B8%80%E5%8F%A5%E8%AF%9D%E8%83%8C%E8%AF%B5%E7%89%88"><span class="toc-number">20.</span> <span class="toc-text">十九、附：一句话背诵版</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        排序算法总结
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">LightningJie</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-04-19T03:00:00.000Z" class="dt-published" itemprop="datePublished">2026-04-19</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/c/">c++</a> › <a class="category-link" href="/categories/c/%E9%9A%8F%E7%AC%94/">随笔</a>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="排序算法总结（C-版）"><a href="#排序算法总结（C-版）" class="headerlink" title="排序算法总结（C++版）"></a>排序算法总结（C++版）</h1><p>这篇文章把面试里最常考的排序算法做一个系统整理。目标不是只会背结论，而是能在面试里把：</p>
+<ul>
+<li>核心思想</li>
+<li>时间复杂度</li>
+<li>空间复杂度</li>
+<li>稳定性</li>
+<li>适用场景</li>
+<li>手写模板</li>
+<li>高频追问</li>
+</ul>
+<p>说清楚。</p>
+<hr>
+<h1 id="一、总览"><a href="#一、总览" class="headerlink" title="一、总览"></a>一、总览</h1><table>
+<thead>
+<tr>
+<th>排序算法</th>
+<th align="right">平均时间复杂度</th>
+<th align="right">最坏时间复杂度</th>
+<th align="right">空间复杂度</th>
+<th>稳定性</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>冒泡排序</td>
+<td align="right">O(n^2)</td>
+<td align="right">O(n^2)</td>
+<td align="right">O(1)</td>
+<td>稳定</td>
+<td>简单，适合入门</td>
+</tr>
+<tr>
+<td>选择排序</td>
+<td align="right">O(n^2)</td>
+<td align="right">O(n^2)</td>
+<td align="right">O(1)</td>
+<td>不稳定</td>
+<td>交换次数少</td>
+</tr>
+<tr>
+<td>插入排序</td>
+<td align="right">O(n^2)</td>
+<td align="right">O(n^2)</td>
+<td align="right">O(1)</td>
+<td>稳定</td>
+<td>小规模数据很好用</td>
+</tr>
+<tr>
+<td>希尔排序</td>
+<td align="right">约 O(n^1.3 ~ n^2)</td>
+<td align="right">O(n^2)</td>
+<td align="right">O(1)</td>
+<td>不稳定</td>
+<td>插入排序的优化版</td>
+</tr>
+<tr>
+<td>归并排序</td>
+<td align="right">O(n log n)</td>
+<td align="right">O(n log n)</td>
+<td align="right">O(n)</td>
+<td>稳定</td>
+<td>分治思想，复杂度稳定</td>
+</tr>
+<tr>
+<td>快速排序</td>
+<td align="right">O(n log n)</td>
+<td align="right">O(n^2)</td>
+<td align="right">O(log n)</td>
+<td>不稳定</td>
+<td>面试最常考，实际常很快</td>
+</tr>
+<tr>
+<td>堆排序</td>
+<td align="right">O(n log n)</td>
+<td align="right">O(n log n)</td>
+<td align="right">O(1)</td>
+<td>不稳定</td>
+<td>原地排序，复杂度稳定</td>
+</tr>
+<tr>
+<td>计数排序</td>
+<td align="right">O(n + k)</td>
+<td align="right">O(n + k)</td>
+<td align="right">O(k)</td>
+<td>稳定</td>
+<td>适合数据范围小的整数</td>
+</tr>
+<tr>
+<td>桶排序</td>
+<td align="right">近似 O(n)</td>
+<td align="right">取决于分布</td>
+<td align="right">取决于桶数</td>
+<td>可稳定</td>
+<td>适合分布均匀的数据</td>
+</tr>
+<tr>
+<td>基数排序</td>
+<td align="right">O(d(n + k))</td>
+<td align="right">O(d(n + k))</td>
+<td align="right">O(n + k)</td>
+<td>稳定</td>
+<td>适合位数固定的整数&#x2F;字符串</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="二、冒泡排序"><a href="#二、冒泡排序" class="headerlink" title="二、冒泡排序"></a>二、冒泡排序</h1><h2 id="1-思想"><a href="#1-思想" class="headerlink" title="1. 思想"></a>1. 思想</h2><p>相邻两个元素两两比较，如果顺序不对就交换。每一轮会把当前最大的元素“冒泡”到最后。</p>
+<h2 id="2-例子"><a href="#2-例子" class="headerlink" title="2. 例子"></a>2. 例子</h2><p>数组：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">5</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">1</span>]</span><br></pre></td></tr></table></figure>
+
+<p>第一轮：</p>
+<ul>
+<li>5 和 2 比，交换 -&gt; <code>[2,5,3,1]</code></li>
+<li>5 和 3 比，交换 -&gt; <code>[2,3,5,1]</code></li>
+<li>5 和 1 比，交换 -&gt; <code>[2,3,1,5]</code></li>
+</ul>
+<p>这一轮结束，最大值 5 到末尾。</p>
+<h2 id="3-代码"><a href="#3-代码" class="headerlink" title="3. 代码"></a>3. 代码</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">bubbleSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = nums.<span class="built_in">size</span>();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n - <span class="number">1</span>; i++) &#123;</span><br><span class="line">        <span class="type">bool</span> swapped = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> j = <span class="number">0</span>; j &lt; n - <span class="number">1</span> - i; j++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (nums[j] &gt; nums[j + <span class="number">1</span>]) &#123;</span><br><span class="line">                <span class="built_in">swap</span>(nums[j], nums[j + <span class="number">1</span>]);</span><br><span class="line">                swapped = <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!swapped) <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-特点"><a href="#4-特点" class="headerlink" title="4. 特点"></a>4. 特点</h2><ul>
+<li>稳定排序</li>
+<li>空间 O(1)</li>
+<li>优化后，如果数组本来就有序，可以提前结束</li>
+</ul>
+<h2 id="5-高频追问"><a href="#5-高频追问" class="headerlink" title="5. 高频追问"></a>5. 高频追问</h2><h3 id="为什么稳定？"><a href="#为什么稳定？" class="headerlink" title="为什么稳定？"></a>为什么稳定？</h3><p>因为只有前一个元素严格大于后一个元素时才交换，相等元素不会改变相对顺序。</p>
+<hr>
+<h1 id="三、选择排序"><a href="#三、选择排序" class="headerlink" title="三、选择排序"></a>三、选择排序</h1><h2 id="1-思想-1"><a href="#1-思想-1" class="headerlink" title="1. 思想"></a>1. 思想</h2><p>每一轮从未排序部分中找最小值，放到当前起始位置。</p>
+<h2 id="2-代码"><a href="#2-代码" class="headerlink" title="2. 代码"></a>2. 代码</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">selectionSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = nums.<span class="built_in">size</span>();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n - <span class="number">1</span>; i++) &#123;</span><br><span class="line">        <span class="type">int</span> minIndex = i;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> j = i + <span class="number">1</span>; j &lt; n; j++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (nums[j] &lt; nums[minIndex]) &#123;</span><br><span class="line">                minIndex = j;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (minIndex != i) <span class="built_in">swap</span>(nums[i], nums[minIndex]);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-特点"><a href="#3-特点" class="headerlink" title="3. 特点"></a>3. 特点</h2><ul>
+<li>不稳定</li>
+<li>空间 O(1)</li>
+<li>交换次数少，但比较次数固定很多</li>
+</ul>
+<h2 id="4-为什么不稳定？"><a href="#4-为什么不稳定？" class="headerlink" title="4. 为什么不稳定？"></a>4. 为什么不稳定？</h2><p>例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">5</span>a, <span class="number">5</span>b, <span class="number">3</span>]</span><br></pre></td></tr></table></figure>
+
+<p>第一轮会把 3 交换到最前面，可能变成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">3</span>, <span class="number">5</span>b, <span class="number">5</span>a]</span><br></pre></td></tr></table></figure>
+
+<p>相等元素 <code>5a</code> 和 <code>5b</code> 的顺序变了，所以不稳定。</p>
+<hr>
+<h1 id="四、插入排序"><a href="#四、插入排序" class="headerlink" title="四、插入排序"></a>四、插入排序</h1><h2 id="1-思想-2"><a href="#1-思想-2" class="headerlink" title="1. 思想"></a>1. 思想</h2><p>把数组分成“已排序区间”和“未排序区间”，每次从未排序区间拿一个数，插到已排序区间正确位置。</p>
+<h2 id="2-例子-1"><a href="#2-例子-1" class="headerlink" title="2. 例子"></a>2. 例子</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">5</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">1</span>]</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>先认为 5 已有序</li>
+<li>插入 2 -&gt; <code>[2,5,3,1]</code></li>
+<li>插入 3 -&gt; <code>[2,3,5,1]</code></li>
+<li>插入 1 -&gt; <code>[1,2,3,5]</code></li>
+</ul>
+<h2 id="3-代码-1"><a href="#3-代码-1" class="headerlink" title="3. 代码"></a>3. 代码</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">insertionSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = nums.<span class="built_in">size</span>();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt; n; i++) &#123;</span><br><span class="line">        <span class="type">int</span> key = nums[i];</span><br><span class="line">        <span class="type">int</span> j = i - <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">while</span> (j &gt;= <span class="number">0</span> &amp;&amp; nums[j] &gt; key) &#123;</span><br><span class="line">            nums[j + <span class="number">1</span>] = nums[j];</span><br><span class="line">            j--;</span><br><span class="line">        &#125;</span><br><span class="line">        nums[j + <span class="number">1</span>] = key;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-特点-1"><a href="#4-特点-1" class="headerlink" title="4. 特点"></a>4. 特点</h2><ul>
+<li>稳定</li>
+<li>空间 O(1)</li>
+<li>对“小规模”或“接近有序”的数据非常好</li>
+</ul>
+<h2 id="5-高频追问-1"><a href="#5-高频追问-1" class="headerlink" title="5. 高频追问"></a>5. 高频追问</h2><h3 id="为什么很多库排序在小区间会退化成插入排序？"><a href="#为什么很多库排序在小区间会退化成插入排序？" class="headerlink" title="为什么很多库排序在小区间会退化成插入排序？"></a>为什么很多库排序在小区间会退化成插入排序？</h3><p>因为插入排序常数小、实现简单，对小数组往往比快排、归并更快。</p>
+<hr>
+<h1 id="五、希尔排序"><a href="#五、希尔排序" class="headerlink" title="五、希尔排序"></a>五、希尔排序</h1><h2 id="1-思想-3"><a href="#1-思想-3" class="headerlink" title="1. 思想"></a>1. 思想</h2><p>希尔排序本质上是“分组插入排序”。</p>
+<p>先按 gap 把相距较远的元素看成一组，分别做插入排序；再不断缩小 gap，最后 gap &#x3D; 1 时，相当于做一次整体插入排序。</p>
+<h2 id="2-代码-1"><a href="#2-代码-1" class="headerlink" title="2. 代码"></a>2. 代码</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">shellSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = nums.<span class="built_in">size</span>();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> gap = n / <span class="number">2</span>; gap &gt; <span class="number">0</span>; gap /= <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = gap; i &lt; n; i++) &#123;</span><br><span class="line">            <span class="type">int</span> key = nums[i];</span><br><span class="line">            <span class="type">int</span> j = i - gap;</span><br><span class="line">            <span class="keyword">while</span> (j &gt;= <span class="number">0</span> &amp;&amp; nums[j] &gt; key) &#123;</span><br><span class="line">                nums[j + gap] = nums[j];</span><br><span class="line">                j -= gap;</span><br><span class="line">            &#125;</span><br><span class="line">            nums[j + gap] = key;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-特点-1"><a href="#3-特点-1" class="headerlink" title="3. 特点"></a>3. 特点</h2><ul>
+<li>不稳定</li>
+<li>是插入排序的优化版</li>
+<li>面试频率不如快排、归并、堆排高，但偶尔会问</li>
+</ul>
+<hr>
+<h1 id="六、归并排序"><a href="#六、归并排序" class="headerlink" title="六、归并排序"></a>六、归并排序</h1><h2 id="1-思想-4"><a href="#1-思想-4" class="headerlink" title="1. 思想"></a>1. 思想</h2><p>归并排序就是：</p>
+<blockquote>
+<p>先递归拆分，再合并两个有序数组。</p>
+</blockquote>
+<p>把数组不断拆成两半，直到每部分只有一个元素；然后再把两个有序子数组合并起来。</p>
+<h2 id="2-代码-2"><a href="#2-代码-2" class="headerlink" title="2. 代码"></a>2. 代码</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">mergeSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums, <span class="type">int</span> l, <span class="type">int</span> r)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (l &gt;= r) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> mid = l + (r - l) / <span class="number">2</span>;</span><br><span class="line">    <span class="built_in">mergeSort</span>(nums, l, mid);</span><br><span class="line">    <span class="built_in">mergeSort</span>(nums, mid + <span class="number">1</span>, r);</span><br><span class="line"></span><br><span class="line">    vector&lt;<span class="type">int</span>&gt; tmp;</span><br><span class="line">    <span class="type">int</span> i = l, j = mid + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (i &lt;= mid &amp;&amp; j &lt;= r) &#123;</span><br><span class="line">        <span class="keyword">if</span> (nums[i] &lt;= nums[j]) tmp.<span class="built_in">push_back</span>(nums[i++]);</span><br><span class="line">        <span class="keyword">else</span> tmp.<span class="built_in">push_back</span>(nums[j++]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (i &lt;= mid) tmp.<span class="built_in">push_back</span>(nums[i++]);</span><br><span class="line">    <span class="keyword">while</span> (j &lt;= r) tmp.<span class="built_in">push_back</span>(nums[j++]);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> k = <span class="number">0</span>; k &lt; (<span class="type">int</span>)tmp.<span class="built_in">size</span>(); k++) &#123;</span><br><span class="line">        nums[l + k] = tmp[k];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>完整调用：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">sortArray</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">mergeSort</span>(nums, <span class="number">0</span>, nums.<span class="built_in">size</span>() - <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-特点-2"><a href="#3-特点-2" class="headerlink" title="3. 特点"></a>3. 特点</h2><ul>
+<li>时间复杂度稳定 O(n log n)</li>
+<li>稳定排序</li>
+<li>空间复杂度 O(n)</li>
+</ul>
+<h2 id="4-高频追问"><a href="#4-高频追问" class="headerlink" title="4. 高频追问"></a>4. 高频追问</h2><h3 id="为什么归并排序是稳定的？"><a href="#为什么归并排序是稳定的？" class="headerlink" title="为什么归并排序是稳定的？"></a>为什么归并排序是稳定的？</h3><p>因为合并时如果相等，通常先放左边元素：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (nums[i] &lt;= nums[j])</span><br></pre></td></tr></table></figure>
+
+<p>这样相同元素的相对顺序不会变。</p>
+<h3 id="为什么适合链表排序？"><a href="#为什么适合链表排序？" class="headerlink" title="为什么适合链表排序？"></a>为什么适合链表排序？</h3><p>链表不适合随机访问，但特别适合从中间断开再合并，所以链表排序经典就是归并排序。</p>
+<hr>
+<h1 id="七、快速排序"><a href="#七、快速排序" class="headerlink" title="七、快速排序"></a>七、快速排序</h1><h2 id="1-思想-5"><a href="#1-思想-5" class="headerlink" title="1. 思想"></a>1. 思想</h2><p>快速排序就是：</p>
+<blockquote>
+<p>选一个 pivot，把小于等于它的放左边，大于等于它的放右边，然后递归排左右两边。</p>
+</blockquote>
+<h2 id="2-经典模板"><a href="#2-经典模板" class="headerlink" title="2. 经典模板"></a>2. 经典模板</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">quickSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums, <span class="type">int</span> l, <span class="type">int</span> r)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (l &gt;= r) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> p = l + <span class="built_in">rand</span>() % (r - l + <span class="number">1</span>);</span><br><span class="line">    <span class="built_in">swap</span>(nums[l], nums[p]);</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> i = l, j = r;</span><br><span class="line">    <span class="type">int</span> pivot = nums[l];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (i &lt; j) &#123;</span><br><span class="line">        <span class="keyword">while</span> (i &lt; j &amp;&amp; nums[j] &gt;= pivot) j--;</span><br><span class="line">        <span class="keyword">while</span> (i &lt; j &amp;&amp; nums[i] &lt;= pivot) i++;</span><br><span class="line">        <span class="keyword">if</span> (i &lt; j) <span class="built_in">swap</span>(nums[i], nums[j]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    nums[l] = nums[i];</span><br><span class="line">    nums[i] = pivot;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">quickSort</span>(nums, l, i - <span class="number">1</span>);</span><br><span class="line">    <span class="built_in">quickSort</span>(nums, i + <span class="number">1</span>, r);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>完整调用：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">sortArray</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">srand</span>(<span class="built_in">time</span>(<span class="number">0</span>));</span><br><span class="line">    <span class="built_in">quickSort</span>(nums, <span class="number">0</span>, nums.<span class="built_in">size</span>() - <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-特点-3"><a href="#3-特点-3" class="headerlink" title="3. 特点"></a>3. 特点</h2><ul>
+<li>平均 O(n log n)</li>
+<li>最坏 O(n^2)</li>
+<li>空间复杂度平均 O(log n)</li>
+<li>不稳定</li>
+<li>面试最常考</li>
+</ul>
+<h2 id="4-高频追问-1"><a href="#4-高频追问-1" class="headerlink" title="4. 高频追问"></a>4. 高频追问</h2><h3 id="为什么先走右边再走左边？"><a href="#为什么先走右边再走左边？" class="headerlink" title="为什么先走右边再走左边？"></a>为什么先走右边再走左边？</h3><p>因为 pivot 放在左边，最后要把坑位留给 pivot，常见模板就是先从右往左找小的，再从左往右找大的。</p>
+<h3 id="为什么要随机-pivot？"><a href="#为什么要随机-pivot？" class="headerlink" title="为什么要随机 pivot？"></a>为什么要随机 pivot？</h3><p>为了避免原数组接近有序时退化成 O(n^2)。</p>
+<h3 id="快排为什么平均是-O-n-log-n-？"><a href="#快排为什么平均是-O-n-log-n-？" class="headerlink" title="快排为什么平均是 O(n log n)？"></a>快排为什么平均是 O(n log n)？</h3><p>每轮 partition 代价是 O(n)，平均情况下会比较均匀地分成两部分，所以递归层数平均是 O(log n)，总复杂度是 O(n log n)。</p>
+<hr>
+<h1 id="八、快速选择（Quick-Select）"><a href="#八、快速选择（Quick-Select）" class="headerlink" title="八、快速选择（Quick Select）"></a>八、快速选择（Quick Select）</h1><p>虽然它不是完整排序，但面试经常和快排一起问。</p>
+<h2 id="1-适用题型"><a href="#1-适用题型" class="headerlink" title="1. 适用题型"></a>1. 适用题型</h2><ul>
+<li>第 K 大元素</li>
+<li>最小的 K 个数</li>
+</ul>
+<h2 id="2-思想"><a href="#2-思想" class="headerlink" title="2. 思想"></a>2. 思想</h2><p>它复用了快排的 partition，但不递归两边，只递归答案所在的一边。</p>
+<h2 id="3-复杂度"><a href="#3-复杂度" class="headerlink" title="3. 复杂度"></a>3. 复杂度</h2><ul>
+<li>平均 O(n)</li>
+<li>最坏 O(n^2)</li>
+</ul>
+<h2 id="4-典型题"><a href="#4-典型题" class="headerlink" title="4. 典型题"></a>4. 典型题</h2><ul>
+<li>LeetCode 215. 数组中的第 K 个最大元素</li>
+</ul>
+<hr>
+<h1 id="九、堆排序"><a href="#九、堆排序" class="headerlink" title="九、堆排序"></a>九、堆排序</h1><h2 id="1-思想-6"><a href="#1-思想-6" class="headerlink" title="1. 思想"></a>1. 思想</h2><p>堆排序可以理解成：</p>
+<blockquote>
+<p>先建大根堆，再不断把堆顶最大值交换到数组末尾。</p>
+</blockquote>
+<h2 id="2-代码-3"><a href="#2-代码-3" class="headerlink" title="2. 代码"></a>2. 代码</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">heapify</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums, <span class="type">int</span> n, <span class="type">int</span> i)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> largest = i;</span><br><span class="line">    <span class="type">int</span> left = <span class="number">2</span> * i + <span class="number">1</span>;</span><br><span class="line">    <span class="type">int</span> right = <span class="number">2</span> * i + <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (left &lt; n &amp;&amp; nums[left] &gt; nums[largest]) largest = left;</span><br><span class="line">    <span class="keyword">if</span> (right &lt; n &amp;&amp; nums[right] &gt; nums[largest]) largest = right;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (largest != i) &#123;</span><br><span class="line">        <span class="built_in">swap</span>(nums[i], nums[largest]);</span><br><span class="line">        <span class="built_in">heapify</span>(nums, n, largest);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">heapSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = nums.<span class="built_in">size</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = n / <span class="number">2</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">        <span class="built_in">heapify</span>(nums, n, i);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = n - <span class="number">1</span>; i &gt; <span class="number">0</span>; i--) &#123;</span><br><span class="line">        <span class="built_in">swap</span>(nums[<span class="number">0</span>], nums[i]);</span><br><span class="line">        <span class="built_in">heapify</span>(nums, i, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-特点-4"><a href="#3-特点-4" class="headerlink" title="3. 特点"></a>3. 特点</h2><ul>
+<li>O(n log n)</li>
+<li>空间 O(1)</li>
+<li>不稳定</li>
+<li>原地排序</li>
+</ul>
+<h2 id="4-高频追问-2"><a href="#4-高频追问-2" class="headerlink" title="4. 高频追问"></a>4. 高频追问</h2><h3 id="为什么建堆从-n-2-1-开始？"><a href="#为什么建堆从-n-2-1-开始？" class="headerlink" title="为什么建堆从 n/2 - 1 开始？"></a>为什么建堆从 <code>n/2 - 1</code> 开始？</h3><p>因为叶子节点没有孩子，不需要向下调整。最后一个非叶子节点就是 <code>n/2 - 1</code>。</p>
+<h3 id="为什么堆排序不稳定？"><a href="#为什么堆排序不稳定？" class="headerlink" title="为什么堆排序不稳定？"></a>为什么堆排序不稳定？</h3><p>因为堆顶和末尾交换时，相同元素的相对顺序可能被打乱。</p>
+<h3 id="数组中如何表示堆？"><a href="#数组中如何表示堆？" class="headerlink" title="数组中如何表示堆？"></a>数组中如何表示堆？</h3><p>对于下标 i：</p>
+<ul>
+<li>左孩子：<code>2*i + 1</code></li>
+<li>右孩子：<code>2*i + 2</code></li>
+<li>父节点：<code>(i - 1) / 2</code></li>
+</ul>
+<hr>
+<h1 id="十、计数排序"><a href="#十、计数排序" class="headerlink" title="十、计数排序"></a>十、计数排序</h1><h2 id="1-思想-7"><a href="#1-思想-7" class="headerlink" title="1. 思想"></a>1. 思想</h2><p>适用于数据范围不大的整数。统计每个数出现了多少次，然后按次数回填。</p>
+<h2 id="2-代码-4"><a href="#2-代码-4" class="headerlink" title="2. 代码"></a>2. 代码</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">vector&lt;<span class="type">int</span>&gt; <span class="title">countingSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> mn = *<span class="built_in">min_element</span>(nums.<span class="built_in">begin</span>(), nums.<span class="built_in">end</span>());</span><br><span class="line">    <span class="type">int</span> mx = *<span class="built_in">max_element</span>(nums.<span class="built_in">begin</span>(), nums.<span class="built_in">end</span>());</span><br><span class="line">    <span class="function">vector&lt;<span class="type">int</span>&gt; <span class="title">cnt</span><span class="params">(mx - mn + <span class="number">1</span>, <span class="number">0</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> x : nums) cnt[x - mn]++;</span><br><span class="line"></span><br><span class="line">    vector&lt;<span class="type">int</span>&gt; res;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; (<span class="type">int</span>)cnt.<span class="built_in">size</span>(); i++) &#123;</span><br><span class="line">        <span class="keyword">while</span> (cnt[i]--) &#123;</span><br><span class="line">            res.<span class="built_in">push_back</span>(i + mn);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-特点-5"><a href="#3-特点-5" class="headerlink" title="3. 特点"></a>3. 特点</h2><ul>
+<li>时间复杂度 O(n + k)</li>
+<li>适合整数且范围小</li>
+<li>不是基于比较的排序</li>
+</ul>
+<h2 id="4-高频追问-3"><a href="#4-高频追问-3" class="headerlink" title="4. 高频追问"></a>4. 高频追问</h2><h3 id="为什么计数排序不适合数据范围特别大？"><a href="#为什么计数排序不适合数据范围特别大？" class="headerlink" title="为什么计数排序不适合数据范围特别大？"></a>为什么计数排序不适合数据范围特别大？</h3><p>因为需要开一个按值域大小分配的数组，值域太大会造成空间浪费甚至无法接受。</p>
+<hr>
+<h1 id="十一、桶排序"><a href="#十一、桶排序" class="headerlink" title="十一、桶排序"></a>十一、桶排序</h1><h2 id="1-思想-8"><a href="#1-思想-8" class="headerlink" title="1. 思想"></a>1. 思想</h2><p>把数据分到多个桶里，每个桶内再单独排序，最后按桶顺序拼起来。</p>
+<h2 id="2-特点"><a href="#2-特点" class="headerlink" title="2. 特点"></a>2. 特点</h2><ul>
+<li>适合数据分布比较均匀的情况</li>
+<li>如果分布很差，可能退化</li>
+<li>常作为思路题，不一定真让你手写完整版</li>
+</ul>
+<h2 id="3-高频追问"><a href="#3-高频追问" class="headerlink" title="3. 高频追问"></a>3. 高频追问</h2><h3 id="桶排序和计数排序区别？"><a href="#桶排序和计数排序区别？" class="headerlink" title="桶排序和计数排序区别？"></a>桶排序和计数排序区别？</h3><ul>
+<li>计数排序是“每个值对应一个计数位”</li>
+<li>桶排序是“每个区间对应一个桶”</li>
+</ul>
+<hr>
+<h1 id="十二、基数排序"><a href="#十二、基数排序" class="headerlink" title="十二、基数排序"></a>十二、基数排序</h1><h2 id="1-思想-9"><a href="#1-思想-9" class="headerlink" title="1. 思想"></a>1. 思想</h2><p>按位排序。常见是从个位开始，到十位、百位……每一位都做一次稳定排序。</p>
+<h2 id="2-特点-1"><a href="#2-特点-1" class="headerlink" title="2. 特点"></a>2. 特点</h2><ul>
+<li>适合位数固定的整数或字符串</li>
+<li>依赖稳定排序作为子过程</li>
+<li>不是基于比较的排序</li>
+</ul>
+<h2 id="3-高频追问-1"><a href="#3-高频追问-1" class="headerlink" title="3. 高频追问"></a>3. 高频追问</h2><h3 id="为什么基数排序要求子排序稳定？"><a href="#为什么基数排序要求子排序稳定？" class="headerlink" title="为什么基数排序要求子排序稳定？"></a>为什么基数排序要求子排序稳定？</h3><p>因为低位排好的相对顺序，需要在更高位排序时保留下来。</p>
+<hr>
+<h1 id="十三、稳定排序与不稳定排序"><a href="#十三、稳定排序与不稳定排序" class="headerlink" title="十三、稳定排序与不稳定排序"></a>十三、稳定排序与不稳定排序</h1><h2 id="1-什么叫稳定？"><a href="#1-什么叫稳定？" class="headerlink" title="1. 什么叫稳定？"></a>1. 什么叫稳定？</h2><p>如果两个元素值相同，排序后它们的相对顺序不变，就叫稳定排序。</p>
+<p>例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">3</span>a, <span class="number">1</span>, <span class="number">3</span>b]</span><br></pre></td></tr></table></figure>
+
+<p>如果排序后还是：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">3</span>a, <span class="number">3</span>b]</span><br></pre></td></tr></table></figure>
+
+<p>那就是稳定。</p>
+<p>如果变成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">3</span>b, <span class="number">3</span>a]</span><br></pre></td></tr></table></figure>
+
+<p>那就是不稳定。</p>
+<h2 id="2-常见稳定排序"><a href="#2-常见稳定排序" class="headerlink" title="2. 常见稳定排序"></a>2. 常见稳定排序</h2><ul>
+<li>冒泡排序</li>
+<li>插入排序</li>
+<li>归并排序</li>
+<li>计数排序</li>
+<li>基数排序</li>
+</ul>
+<h2 id="3-常见不稳定排序"><a href="#3-常见不稳定排序" class="headerlink" title="3. 常见不稳定排序"></a>3. 常见不稳定排序</h2><ul>
+<li>选择排序</li>
+<li>快速排序</li>
+<li>堆排序</li>
+<li>希尔排序</li>
+</ul>
+<hr>
+<h1 id="十四、面试最常考的几个对比"><a href="#十四、面试最常考的几个对比" class="headerlink" title="十四、面试最常考的几个对比"></a>十四、面试最常考的几个对比</h1><h2 id="1-快排-vs-归并"><a href="#1-快排-vs-归并" class="headerlink" title="1. 快排 vs 归并"></a>1. 快排 vs 归并</h2><h3 id="快排"><a href="#快排" class="headerlink" title="快排"></a>快排</h3><ul>
+<li>平均 O(n log n)</li>
+<li>最坏 O(n^2)</li>
+<li>空间较省</li>
+<li>不稳定</li>
+<li>实际常很快</li>
+</ul>
+<h3 id="归并"><a href="#归并" class="headerlink" title="归并"></a>归并</h3><ul>
+<li>稳定 O(n log n)</li>
+<li>需要 O(n) 额外空间</li>
+<li>稳定排序</li>
+<li>适合链表排序和外部排序</li>
+</ul>
+<h2 id="2-快排-vs-堆排"><a href="#2-快排-vs-堆排" class="headerlink" title="2. 快排 vs 堆排"></a>2. 快排 vs 堆排</h2><h3 id="快排-1"><a href="#快排-1" class="headerlink" title="快排"></a>快排</h3><ul>
+<li>平均更快</li>
+<li>常数通常更优</li>
+<li>最坏会退化</li>
+</ul>
+<h3 id="堆排"><a href="#堆排" class="headerlink" title="堆排"></a>堆排</h3><ul>
+<li>复杂度稳定 O(n log n)</li>
+<li>原地排序 O(1)</li>
+<li>但实际常数偏大，通常没快排快</li>
+</ul>
+<h2 id="3-插入排序-vs-冒泡排序"><a href="#3-插入排序-vs-冒泡排序" class="headerlink" title="3. 插入排序 vs 冒泡排序"></a>3. 插入排序 vs 冒泡排序</h2><ul>
+<li>都是 O(n^2)</li>
+<li>但插入排序通常更常用、也更高效一点</li>
+<li>冒泡排序更多偏教学和基础题</li>
+</ul>
+<hr>
+<h1 id="十五、面试中排序题怎么选"><a href="#十五、面试中排序题怎么选" class="headerlink" title="十五、面试中排序题怎么选"></a>十五、面试中排序题怎么选</h1><h2 id="1-如果题目就是“排序数组”"><a href="#1-如果题目就是“排序数组”" class="headerlink" title="1. 如果题目就是“排序数组”"></a>1. 如果题目就是“排序数组”</h2><p>优先考虑：</p>
+<ul>
+<li>快排</li>
+<li>归并排序</li>
+<li>堆排序</li>
+</ul>
+<h2 id="2-如果是链表排序"><a href="#2-如果是链表排序" class="headerlink" title="2. 如果是链表排序"></a>2. 如果是链表排序</h2><p>优先：</p>
+<ul>
+<li>归并排序</li>
+</ul>
+<h2 id="3-如果是找第-K-大-第-K-小"><a href="#3-如果是找第-K-大-第-K-小" class="headerlink" title="3. 如果是找第 K 大&#x2F;第 K 小"></a>3. 如果是找第 K 大&#x2F;第 K 小</h2><p>优先：</p>
+<ul>
+<li>快速选择</li>
+<li>堆</li>
+</ul>
+<h2 id="4-如果数据范围特别小，而且是整数"><a href="#4-如果数据范围特别小，而且是整数" class="headerlink" title="4. 如果数据范围特别小，而且是整数"></a>4. 如果数据范围特别小，而且是整数</h2><p>优先考虑：</p>
+<ul>
+<li>计数排序</li>
+<li>基数排序</li>
+</ul>
+<h2 id="5-如果数组很小或接近有序"><a href="#5-如果数组很小或接近有序" class="headerlink" title="5. 如果数组很小或接近有序"></a>5. 如果数组很小或接近有序</h2><p>优先考虑：</p>
+<ul>
+<li>插入排序</li>
+</ul>
+<hr>
+<h1 id="十六、面试中常见问题整理"><a href="#十六、面试中常见问题整理" class="headerlink" title="十六、面试中常见问题整理"></a>十六、面试中常见问题整理</h1><h2 id="1-哪些排序是-O-n-log-n-？"><a href="#1-哪些排序是-O-n-log-n-？" class="headerlink" title="1. 哪些排序是 O(n log n)？"></a>1. 哪些排序是 O(n log n)？</h2><p>常见比较排序里：</p>
+<ul>
+<li>归并排序</li>
+<li>快速排序（平均）</li>
+<li>堆排序</li>
+</ul>
+<h2 id="2-哪些排序是稳定的？"><a href="#2-哪些排序是稳定的？" class="headerlink" title="2. 哪些排序是稳定的？"></a>2. 哪些排序是稳定的？</h2><ul>
+<li>冒泡</li>
+<li>插入</li>
+<li>归并</li>
+<li>计数</li>
+<li>基数</li>
+</ul>
+<h2 id="3-哪些排序是原地排序？"><a href="#3-哪些排序是原地排序？" class="headerlink" title="3. 哪些排序是原地排序？"></a>3. 哪些排序是原地排序？</h2><p>常见：</p>
+<ul>
+<li>冒泡</li>
+<li>选择</li>
+<li>插入</li>
+<li>希尔</li>
+<li>快排（通常算原地）</li>
+<li>堆排</li>
+</ul>
+<p>归并排序一般不算原地，因为要额外数组。</p>
+<h2 id="4-为什么快排平均快？"><a href="#4-为什么快排平均快？" class="headerlink" title="4. 为什么快排平均快？"></a>4. 为什么快排平均快？</h2><p>因为 partition 操作局部性好，常数小，而且不需要像归并那样额外开大数组。</p>
+<h2 id="5-为什么归并适合外部排序？"><a href="#5-为什么归并适合外部排序？" class="headerlink" title="5. 为什么归并适合外部排序？"></a>5. 为什么归并适合外部排序？</h2><p>因为它的“分块 + 合并”过程天然适合磁盘文件分段处理。</p>
+<h2 id="6-堆排序为什么空间复杂度-O-1-？"><a href="#6-堆排序为什么空间复杂度-O-1-？" class="headerlink" title="6. 堆排序为什么空间复杂度 O(1)？"></a>6. 堆排序为什么空间复杂度 O(1)？</h2><p>因为它直接在原数组上建堆和调整，不需要额外的大数组。</p>
+<hr>
+<h1 id="十七、最建议背的三个模板"><a href="#十七、最建议背的三个模板" class="headerlink" title="十七、最建议背的三个模板"></a>十七、最建议背的三个模板</h1><h2 id="1-快排"><a href="#1-快排" class="headerlink" title="1. 快排"></a>1. 快排</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">quickSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums, <span class="type">int</span> l, <span class="type">int</span> r)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (l &gt;= r) <span class="keyword">return</span>;</span><br><span class="line">    <span class="type">int</span> p = l + <span class="built_in">rand</span>() % (r - l + <span class="number">1</span>);</span><br><span class="line">    <span class="built_in">swap</span>(nums[l], nums[p]);</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> i = l, j = r, pivot = nums[l];</span><br><span class="line">    <span class="keyword">while</span> (i &lt; j) &#123;</span><br><span class="line">        <span class="keyword">while</span> (i &lt; j &amp;&amp; nums[j] &gt;= pivot) j--;</span><br><span class="line">        <span class="keyword">while</span> (i &lt; j &amp;&amp; nums[i] &lt;= pivot) i++;</span><br><span class="line">        <span class="keyword">if</span> (i &lt; j) <span class="built_in">swap</span>(nums[i], nums[j]);</span><br><span class="line">    &#125;</span><br><span class="line">    nums[l] = nums[i];</span><br><span class="line">    nums[i] = pivot;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">quickSort</span>(nums, l, i - <span class="number">1</span>);</span><br><span class="line">    <span class="built_in">quickSort</span>(nums, i + <span class="number">1</span>, r);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-归并"><a href="#2-归并" class="headerlink" title="2. 归并"></a>2. 归并</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">mergeSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums, <span class="type">int</span> l, <span class="type">int</span> r)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (l &gt;= r) <span class="keyword">return</span>;</span><br><span class="line">    <span class="type">int</span> mid = l + (r - l) / <span class="number">2</span>;</span><br><span class="line">    <span class="built_in">mergeSort</span>(nums, l, mid);</span><br><span class="line">    <span class="built_in">mergeSort</span>(nums, mid + <span class="number">1</span>, r);</span><br><span class="line"></span><br><span class="line">    vector&lt;<span class="type">int</span>&gt; tmp;</span><br><span class="line">    <span class="type">int</span> i = l, j = mid + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">while</span> (i &lt;= mid &amp;&amp; j &lt;= r) &#123;</span><br><span class="line">        <span class="keyword">if</span> (nums[i] &lt;= nums[j]) tmp.<span class="built_in">push_back</span>(nums[i++]);</span><br><span class="line">        <span class="keyword">else</span> tmp.<span class="built_in">push_back</span>(nums[j++]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (i &lt;= mid) tmp.<span class="built_in">push_back</span>(nums[i++]);</span><br><span class="line">    <span class="keyword">while</span> (j &lt;= r) tmp.<span class="built_in">push_back</span>(nums[j++]);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> k = <span class="number">0</span>; k &lt; (<span class="type">int</span>)tmp.<span class="built_in">size</span>(); k++) &#123;</span><br><span class="line">        nums[l + k] = tmp[k];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-堆排"><a href="#3-堆排" class="headerlink" title="3. 堆排"></a>3. 堆排</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">heapify</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums, <span class="type">int</span> n, <span class="type">int</span> i)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> largest = i;</span><br><span class="line">    <span class="type">int</span> l = <span class="number">2</span> * i + <span class="number">1</span>;</span><br><span class="line">    <span class="type">int</span> r = <span class="number">2</span> * i + <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (l &lt; n &amp;&amp; nums[l] &gt; nums[largest]) largest = l;</span><br><span class="line">    <span class="keyword">if</span> (r &lt; n &amp;&amp; nums[r] &gt; nums[largest]) largest = r;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (largest != i) &#123;</span><br><span class="line">        <span class="built_in">swap</span>(nums[i], nums[largest]);</span><br><span class="line">        <span class="built_in">heapify</span>(nums, n, largest);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">heapSort</span><span class="params">(vector&lt;<span class="type">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = nums.<span class="built_in">size</span>();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = n / <span class="number">2</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) <span class="built_in">heapify</span>(nums, n, i);</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = n - <span class="number">1</span>; i &gt; <span class="number">0</span>; i--) &#123;</span><br><span class="line">        <span class="built_in">swap</span>(nums[<span class="number">0</span>], nums[i]);</span><br><span class="line">        <span class="built_in">heapify</span>(nums, i, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="十八、最后总结"><a href="#十八、最后总结" class="headerlink" title="十八、最后总结"></a>十八、最后总结</h1><p>如果从“面试最值得优先掌握”的角度看，建议这样记：</p>
+<h2 id="第一优先级"><a href="#第一优先级" class="headerlink" title="第一优先级"></a>第一优先级</h2><ul>
+<li>快速排序</li>
+<li>归并排序</li>
+<li>堆排序</li>
+</ul>
+<p>这三个最核心。</p>
+<h2 id="第二优先级"><a href="#第二优先级" class="headerlink" title="第二优先级"></a>第二优先级</h2><ul>
+<li>插入排序</li>
+<li>冒泡排序</li>
+<li>选择排序</li>
+</ul>
+<p>这几个用于补基础、讲稳定性、讲复杂度。</p>
+<h2 id="第三优先级"><a href="#第三优先级" class="headerlink" title="第三优先级"></a>第三优先级</h2><ul>
+<li>计数排序</li>
+<li>桶排序</li>
+<li>基数排序</li>
+</ul>
+<p>这几个偏“非比较排序”，常作为扩展和追问。</p>
+<p>如果你只能背最少内容，那就至少把下面这些背熟：</p>
+<ol>
+<li>快排模板 + 为什么随机 pivot</li>
+<li>归并模板 + 为什么稳定</li>
+<li>堆排模板 + 为什么从 <code>n/2 - 1</code> 开始建堆</li>
+<li>稳定性表</li>
+<li>各排序复杂度对比</li>
+</ol>
+<p>这样大部分排序相关面试题都能覆盖。</p>
+<hr>
+<h1 id="十九、附：一句话背诵版"><a href="#十九、附：一句话背诵版" class="headerlink" title="十九、附：一句话背诵版"></a>十九、附：一句话背诵版</h1><ul>
+<li>冒泡：相邻比较，大的往后冒，稳定。</li>
+<li>选择：每轮选最小放前面，不稳定。</li>
+<li>插入：把当前元素插进前面有序区，稳定。</li>
+<li>希尔：分组做插入，逐步缩 gap，不稳定。</li>
+<li>归并：先分再并，复杂度稳定 O(n log n)，稳定。</li>
+<li>快排：选 pivot 分两边，平均 O(n log n)，不稳定。</li>
+<li>堆排：建大根堆，反复取堆顶，O(n log n)，不稳定。</li>
+<li>计数：统计次数后回填，适合小范围整数。</li>
+<li>桶排：按区间分桶，桶内再排，适合分布均匀。</li>
+<li>基数：按位稳定排序，适合位数固定的数据。</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/categories/">分类</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93%EF%BC%88C-%E7%89%88%EF%BC%89"><span class="toc-number">1.</span> <span class="toc-text">排序算法总结（C++版）</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%80%BB%E8%A7%88"><span class="toc-number">2.</span> <span class="toc-text">一、总览</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F"><span class="toc-number">3.</span> <span class="toc-text">二、冒泡排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3"><span class="toc-number">3.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BE%8B%E5%AD%90"><span class="toc-number">3.2.</span> <span class="toc-text">2. 例子</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%BB%A3%E7%A0%81"><span class="toc-number">3.3.</span> <span class="toc-text">3. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%89%B9%E7%82%B9"><span class="toc-number">3.4.</span> <span class="toc-text">4. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE"><span class="toc-number">3.5.</span> <span class="toc-text">5. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E7%A8%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">3.5.1.</span> <span class="toc-text">为什么稳定？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%80%89%E6%8B%A9%E6%8E%92%E5%BA%8F"><span class="toc-number">4.</span> <span class="toc-text">三、选择排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-1"><span class="toc-number">4.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%A3%E7%A0%81"><span class="toc-number">4.2.</span> <span class="toc-text">2. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9"><span class="toc-number">4.3.</span> <span class="toc-text">3. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E7%A8%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">4.4.</span> <span class="toc-text">4. 为什么不稳定？</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%8F%92%E5%85%A5%E6%8E%92%E5%BA%8F"><span class="toc-number">5.</span> <span class="toc-text">四、插入排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-2"><span class="toc-number">5.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BE%8B%E5%AD%90-1"><span class="toc-number">5.2.</span> <span class="toc-text">2. 例子</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%BB%A3%E7%A0%81-1"><span class="toc-number">5.3.</span> <span class="toc-text">3. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%89%B9%E7%82%B9-1"><span class="toc-number">5.4.</span> <span class="toc-text">4. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE-1"><span class="toc-number">5.5.</span> <span class="toc-text">5. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BE%88%E5%A4%9A%E5%BA%93%E6%8E%92%E5%BA%8F%E5%9C%A8%E5%B0%8F%E5%8C%BA%E9%97%B4%E4%BC%9A%E9%80%80%E5%8C%96%E6%88%90%E6%8F%92%E5%85%A5%E6%8E%92%E5%BA%8F%EF%BC%9F"><span class="toc-number">5.5.1.</span> <span class="toc-text">为什么很多库排序在小区间会退化成插入排序？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%B8%8C%E5%B0%94%E6%8E%92%E5%BA%8F"><span class="toc-number">6.</span> <span class="toc-text">五、希尔排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-3"><span class="toc-number">6.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%A3%E7%A0%81-1"><span class="toc-number">6.2.</span> <span class="toc-text">2. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9-1"><span class="toc-number">6.3.</span> <span class="toc-text">3. 特点</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F"><span class="toc-number">7.</span> <span class="toc-text">六、归并排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-4"><span class="toc-number">7.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%A3%E7%A0%81-2"><span class="toc-number">7.2.</span> <span class="toc-text">2. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9-2"><span class="toc-number">7.3.</span> <span class="toc-text">3. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE"><span class="toc-number">7.4.</span> <span class="toc-text">4. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F%E6%98%AF%E7%A8%B3%E5%AE%9A%E7%9A%84%EF%BC%9F"><span class="toc-number">7.4.1.</span> <span class="toc-text">为什么归并排序是稳定的？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%82%E5%90%88%E9%93%BE%E8%A1%A8%E6%8E%92%E5%BA%8F%EF%BC%9F"><span class="toc-number">7.4.2.</span> <span class="toc-text">为什么适合链表排序？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F"><span class="toc-number">8.</span> <span class="toc-text">七、快速排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-5"><span class="toc-number">8.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%BB%8F%E5%85%B8%E6%A8%A1%E6%9D%BF"><span class="toc-number">8.2.</span> <span class="toc-text">2. 经典模板</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9-3"><span class="toc-number">8.3.</span> <span class="toc-text">3. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE-1"><span class="toc-number">8.4.</span> <span class="toc-text">4. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%85%88%E8%B5%B0%E5%8F%B3%E8%BE%B9%E5%86%8D%E8%B5%B0%E5%B7%A6%E8%BE%B9%EF%BC%9F"><span class="toc-number">8.4.1.</span> <span class="toc-text">为什么先走右边再走左边？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E9%9A%8F%E6%9C%BA-pivot%EF%BC%9F"><span class="toc-number">8.4.2.</span> <span class="toc-text">为什么要随机 pivot？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BF%AB%E6%8E%92%E4%B8%BA%E4%BB%80%E4%B9%88%E5%B9%B3%E5%9D%87%E6%98%AF-O-n-log-n-%EF%BC%9F"><span class="toc-number">8.4.3.</span> <span class="toc-text">快排为什么平均是 O(n log n)？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E5%BF%AB%E9%80%9F%E9%80%89%E6%8B%A9%EF%BC%88Quick-Select%EF%BC%89"><span class="toc-number">9.</span> <span class="toc-text">八、快速选择（Quick Select）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%80%82%E7%94%A8%E9%A2%98%E5%9E%8B"><span class="toc-number">9.1.</span> <span class="toc-text">1. 适用题型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%80%9D%E6%83%B3"><span class="toc-number">9.2.</span> <span class="toc-text">2. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="toc-number">9.3.</span> <span class="toc-text">3. 复杂度</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%85%B8%E5%9E%8B%E9%A2%98"><span class="toc-number">9.4.</span> <span class="toc-text">4. 典型题</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%A0%86%E6%8E%92%E5%BA%8F"><span class="toc-number">10.</span> <span class="toc-text">九、堆排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-6"><span class="toc-number">10.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%A3%E7%A0%81-3"><span class="toc-number">10.2.</span> <span class="toc-text">2. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9-4"><span class="toc-number">10.3.</span> <span class="toc-text">3. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE-2"><span class="toc-number">10.4.</span> <span class="toc-text">4. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BB%BA%E5%A0%86%E4%BB%8E-n-2-1-%E5%BC%80%E5%A7%8B%EF%BC%9F"><span class="toc-number">10.4.1.</span> <span class="toc-text">为什么建堆从 n&#x2F;2 - 1 开始？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%A0%86%E6%8E%92%E5%BA%8F%E4%B8%8D%E7%A8%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">10.4.2.</span> <span class="toc-text">为什么堆排序不稳定？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E7%BB%84%E4%B8%AD%E5%A6%82%E4%BD%95%E8%A1%A8%E7%A4%BA%E5%A0%86%EF%BC%9F"><span class="toc-number">10.4.3.</span> <span class="toc-text">数组中如何表示堆？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E8%AE%A1%E6%95%B0%E6%8E%92%E5%BA%8F"><span class="toc-number">11.</span> <span class="toc-text">十、计数排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-7"><span class="toc-number">11.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%A3%E7%A0%81-4"><span class="toc-number">11.2.</span> <span class="toc-text">2. 代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%B9%E7%82%B9-5"><span class="toc-number">11.3.</span> <span class="toc-text">3. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE-3"><span class="toc-number">11.4.</span> <span class="toc-text">4. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%A1%E6%95%B0%E6%8E%92%E5%BA%8F%E4%B8%8D%E9%80%82%E5%90%88%E6%95%B0%E6%8D%AE%E8%8C%83%E5%9B%B4%E7%89%B9%E5%88%AB%E5%A4%A7%EF%BC%9F"><span class="toc-number">11.4.1.</span> <span class="toc-text">为什么计数排序不适合数据范围特别大？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%B8%80%E3%80%81%E6%A1%B6%E6%8E%92%E5%BA%8F"><span class="toc-number">12.</span> <span class="toc-text">十一、桶排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-8"><span class="toc-number">12.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%89%B9%E7%82%B9"><span class="toc-number">12.2.</span> <span class="toc-text">2. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE"><span class="toc-number">12.3.</span> <span class="toc-text">3. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A1%B6%E6%8E%92%E5%BA%8F%E5%92%8C%E8%AE%A1%E6%95%B0%E6%8E%92%E5%BA%8F%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="toc-number">12.3.1.</span> <span class="toc-text">桶排序和计数排序区别？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%BA%8C%E3%80%81%E5%9F%BA%E6%95%B0%E6%8E%92%E5%BA%8F"><span class="toc-number">13.</span> <span class="toc-text">十二、基数排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%9D%E6%83%B3-9"><span class="toc-number">13.1.</span> <span class="toc-text">1. 思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%89%B9%E7%82%B9-1"><span class="toc-number">13.2.</span> <span class="toc-text">2. 特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E9%AB%98%E9%A2%91%E8%BF%BD%E9%97%AE-1"><span class="toc-number">13.3.</span> <span class="toc-text">3. 高频追问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9F%BA%E6%95%B0%E6%8E%92%E5%BA%8F%E8%A6%81%E6%B1%82%E5%AD%90%E6%8E%92%E5%BA%8F%E7%A8%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">13.3.1.</span> <span class="toc-text">为什么基数排序要求子排序稳定？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%B8%89%E3%80%81%E7%A8%B3%E5%AE%9A%E6%8E%92%E5%BA%8F%E4%B8%8E%E4%B8%8D%E7%A8%B3%E5%AE%9A%E6%8E%92%E5%BA%8F"><span class="toc-number">14.</span> <span class="toc-text">十三、稳定排序与不稳定排序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%BB%80%E4%B9%88%E5%8F%AB%E7%A8%B3%E5%AE%9A%EF%BC%9F"><span class="toc-number">14.1.</span> <span class="toc-text">1. 什么叫稳定？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%B8%B8%E8%A7%81%E7%A8%B3%E5%AE%9A%E6%8E%92%E5%BA%8F"><span class="toc-number">14.2.</span> <span class="toc-text">2. 常见稳定排序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%B8%B8%E8%A7%81%E4%B8%8D%E7%A8%B3%E5%AE%9A%E6%8E%92%E5%BA%8F"><span class="toc-number">14.3.</span> <span class="toc-text">3. 常见不稳定排序</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E5%9B%9B%E3%80%81%E9%9D%A2%E8%AF%95%E6%9C%80%E5%B8%B8%E8%80%83%E7%9A%84%E5%87%A0%E4%B8%AA%E5%AF%B9%E6%AF%94"><span class="toc-number">15.</span> <span class="toc-text">十四、面试最常考的几个对比</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%BF%AB%E6%8E%92-vs-%E5%BD%92%E5%B9%B6"><span class="toc-number">15.1.</span> <span class="toc-text">1. 快排 vs 归并</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BF%AB%E6%8E%92"><span class="toc-number">15.1.1.</span> <span class="toc-text">快排</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BD%92%E5%B9%B6"><span class="toc-number">15.1.2.</span> <span class="toc-text">归并</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%BF%AB%E6%8E%92-vs-%E5%A0%86%E6%8E%92"><span class="toc-number">15.2.</span> <span class="toc-text">2. 快排 vs 堆排</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BF%AB%E6%8E%92-1"><span class="toc-number">15.2.1.</span> <span class="toc-text">快排</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A0%86%E6%8E%92"><span class="toc-number">15.2.2.</span> <span class="toc-text">堆排</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%8F%92%E5%85%A5%E6%8E%92%E5%BA%8F-vs-%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F"><span class="toc-number">15.3.</span> <span class="toc-text">3. 插入排序 vs 冒泡排序</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%BA%94%E3%80%81%E9%9D%A2%E8%AF%95%E4%B8%AD%E6%8E%92%E5%BA%8F%E9%A2%98%E6%80%8E%E4%B9%88%E9%80%89"><span class="toc-number">16.</span> <span class="toc-text">十五、面试中排序题怎么选</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%A6%82%E6%9E%9C%E9%A2%98%E7%9B%AE%E5%B0%B1%E6%98%AF%E2%80%9C%E6%8E%92%E5%BA%8F%E6%95%B0%E7%BB%84%E2%80%9D"><span class="toc-number">16.1.</span> <span class="toc-text">1. 如果题目就是“排序数组”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%A6%82%E6%9E%9C%E6%98%AF%E9%93%BE%E8%A1%A8%E6%8E%92%E5%BA%8F"><span class="toc-number">16.2.</span> <span class="toc-text">2. 如果是链表排序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%A6%82%E6%9E%9C%E6%98%AF%E6%89%BE%E7%AC%AC-K-%E5%A4%A7-%E7%AC%AC-K-%E5%B0%8F"><span class="toc-number">16.3.</span> <span class="toc-text">3. 如果是找第 K 大&#x2F;第 K 小</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%A6%82%E6%9E%9C%E6%95%B0%E6%8D%AE%E8%8C%83%E5%9B%B4%E7%89%B9%E5%88%AB%E5%B0%8F%EF%BC%8C%E8%80%8C%E4%B8%94%E6%98%AF%E6%95%B4%E6%95%B0"><span class="toc-number">16.4.</span> <span class="toc-text">4. 如果数据范围特别小，而且是整数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%A6%82%E6%9E%9C%E6%95%B0%E7%BB%84%E5%BE%88%E5%B0%8F%E6%88%96%E6%8E%A5%E8%BF%91%E6%9C%89%E5%BA%8F"><span class="toc-number">16.5.</span> <span class="toc-text">5. 如果数组很小或接近有序</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E5%85%AD%E3%80%81%E9%9D%A2%E8%AF%95%E4%B8%AD%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E6%95%B4%E7%90%86"><span class="toc-number">17.</span> <span class="toc-text">十六、面试中常见问题整理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%93%AA%E4%BA%9B%E6%8E%92%E5%BA%8F%E6%98%AF-O-n-log-n-%EF%BC%9F"><span class="toc-number">17.1.</span> <span class="toc-text">1. 哪些排序是 O(n log n)？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%93%AA%E4%BA%9B%E6%8E%92%E5%BA%8F%E6%98%AF%E7%A8%B3%E5%AE%9A%E7%9A%84%EF%BC%9F"><span class="toc-number">17.2.</span> <span class="toc-text">2. 哪些排序是稳定的？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%93%AA%E4%BA%9B%E6%8E%92%E5%BA%8F%E6%98%AF%E5%8E%9F%E5%9C%B0%E6%8E%92%E5%BA%8F%EF%BC%9F"><span class="toc-number">17.3.</span> <span class="toc-text">3. 哪些排序是原地排序？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BF%AB%E6%8E%92%E5%B9%B3%E5%9D%87%E5%BF%AB%EF%BC%9F"><span class="toc-number">17.4.</span> <span class="toc-text">4. 为什么快排平均快？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BD%92%E5%B9%B6%E9%80%82%E5%90%88%E5%A4%96%E9%83%A8%E6%8E%92%E5%BA%8F%EF%BC%9F"><span class="toc-number">17.5.</span> <span class="toc-text">5. 为什么归并适合外部排序？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E5%A0%86%E6%8E%92%E5%BA%8F%E4%B8%BA%E4%BB%80%E4%B9%88%E7%A9%BA%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6-O-1-%EF%BC%9F"><span class="toc-number">17.6.</span> <span class="toc-text">6. 堆排序为什么空间复杂度 O(1)？</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%B8%83%E3%80%81%E6%9C%80%E5%BB%BA%E8%AE%AE%E8%83%8C%E7%9A%84%E4%B8%89%E4%B8%AA%E6%A8%A1%E6%9D%BF"><span class="toc-number">18.</span> <span class="toc-text">十七、最建议背的三个模板</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%BF%AB%E6%8E%92"><span class="toc-number">18.1.</span> <span class="toc-text">1. 快排</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%BD%92%E5%B9%B6"><span class="toc-number">18.2.</span> <span class="toc-text">2. 归并</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%A0%86%E6%8E%92"><span class="toc-number">18.3.</span> <span class="toc-text">3. 堆排</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E5%85%AB%E3%80%81%E6%9C%80%E5%90%8E%E6%80%BB%E7%BB%93"><span class="toc-number">19.</span> <span class="toc-text">十八、最后总结</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">19.1.</span> <span class="toc-text">第一优先级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">19.2.</span> <span class="toc-text">第二优先级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">19.3.</span> <span class="toc-text">第三优先级</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%81%E4%B9%9D%E3%80%81%E9%99%84%EF%BC%9A%E4%B8%80%E5%8F%A5%E8%AF%9D%E8%83%8C%E8%AF%B5%E7%89%88"><span class="toc-number">20.</span> <span class="toc-text">十九、附：一句话背诵版</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&text=排序算法总结"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&title=排序算法总结"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&is_video=false&description=排序算法总结"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=排序算法总结&body=Check out this article: http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&title=排序算法总结"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&title=排序算法总结"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&title=排序算法总结"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&title=排序算法总结"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&name=排序算法总结&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/04/19/c++/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%80%BB%E7%BB%93/&t=排序算法总结"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2025-2026
+    LightningJie
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/categories/">分类</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/LightningJie">GitHub</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
